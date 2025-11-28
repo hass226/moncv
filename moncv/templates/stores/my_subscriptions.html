@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes Abonnements - MYMEDAGA{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-5">
+            <i class="bi bi-credit-card"></i> Mes Abonnements
+        </h1>
+        <p class="lead">Gérez vos abonnements et vérifications</p>
+    </div>
+</div>
+
+{% if subscriptions %}
+<div class="row g-4">
+    {% for subscription in subscriptions %}
+    <div class="col-md-6">
+        <div class="card" style="border-radius: 20px; overflow: hidden;">
+            <div class="card-header" style="background: linear-gradient(135deg, var(--primary-yellow), var(--primary-orange)); color: white; border: none;">
+                <h5 class="mb-0">
+                    <i class="bi bi-shield-check"></i> {{ subscription.get_plan_type_display }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Montant :</strong> {{ subscription.amount }} €</p>
+                <p><strong>Méthode de paiement :</strong> {{ subscription.get_payment_method_display }}</p>
+                <p><strong>Statut :</strong> 
+                    {% if subscription.status == 'completed' %}
+                        <span class="badge bg-success">Complété</span>
+                    {% elif subscription.status == 'pending' %}
+                        <span class="badge bg-warning">En attente</span>
+                    {% elif subscription.status == 'failed' %}
+                        <span class="badge bg-danger">Échoué</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ subscription.get_status_display }}</span>
+                    {% endif %}
+                </p>
+                <p><strong>Actif :</strong> 
+                    {% if subscription.is_active %}
+                        <span class="badge bg-success">Oui</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Non</span>
+                    {% endif %}
+                </p>
+                <p><strong>Début :</strong> {{ subscription.starts_at|date:"d/m/Y" }}</p>
+                <p><strong>Expire le :</strong> {{ subscription.expires_at|date:"d/m/Y" }}</p>
+                {% if subscription.transaction_id %}
+                <p><strong>ID Transaction :</strong> <code>{{ subscription.transaction_id }}</code></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info text-center" style="background: rgba(255,255,255,0.95); border-radius: 20px; padding: 40px;">
+    <i class="bi bi-info-circle" style="font-size: 3rem; color: var(--primary-orange);"></i>
+    <h4 style="margin-top: 20px;">Aucun abonnement</h4>
+    <p>Vous n'avez pas encore d'abonnement actif.</p>
+    <a href="{% url 'subscribe' %}" class="btn btn-primary mt-3">
+        <i class="bi bi-shield-check"></i> Vérifier ma boutique
+    </a>
+</div>
+{% endif %}
+
+<div class="mt-4">
+    <a href="{% url 'dashboard' %}" class="btn btn-outline-primary">
+        <i class="bi bi-arrow-left"></i> Retour au dashboard
+    </a>
+</div>
+{% endblock %}
+

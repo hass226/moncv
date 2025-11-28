@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load currency_tags %}
+
+{% block title %}Statut du paiement - MYMEDAGA{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-icon {
+        animation-duration: 0.8s;
+        animation-fill-mode: both;
+    }
+    .status-success {
+        animation-name: status-pop;
+    }
+    .status-processing {
+        animation-name: status-pulse;
+        animation-iteration-count: infinite;
+    }
+    .status-failed {
+        animation-name: status-shake;
+    }
+    @keyframes status-pop {
+        0% { transform: scale(0.5); opacity: 0; }
+        60% { transform: scale(1.1); opacity: 1; }
+        100% { transform: scale(1); }
+    }
+    @keyframes status-pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+    }
+    @keyframes status-shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        50% { transform: translateX(5px); }
+        75% { transform: translateX(-3px); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 800px; margin: 50px auto;">
+    <div class="card" style="border-radius: 25px; padding: 40px;">
+        <h1 class="display-5 mb-4 text-center">
+            <i class="bi bi-credit-card-2-front"></i> Statut du paiement
+        </h1>
+
+        <div class="text-center mb-4">
+            {% if payment.status == 'completed' %}
+                <div style="font-size: 4rem; color: var(--primary-green); margin-bottom: 20px;" class="status-icon status-success">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <h2 style="color: var(--primary-green);">Paiement confirmé</h2>
+                <p class="text-muted">Votre paiement a été validé par le fournisseur</p>
+            {% elif payment.status == 'processing' %}
+                <div style="font-size: 4rem; color: var(--primary-yellow); margin-bottom: 20px;" class="status-icon status-processing">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <h2 style="color: var(--primary-yellow);">Paiement en cours</h2>
+                <p class="text-muted">Vérification en cours avec le fournisseur...</p>
+            {% elif payment.status == 'failed' %}
+                <div style="font-size: 4rem; color: var(--primary-red); margin-bottom: 20px;" class="status-icon status-failed">
+                    <i class="bi bi-x-circle-fill"></i>
+                </div>
+                <h2 style="color: var(--primary-red);">Paiement échoué</h2>
+                <p class="text-muted">Le paiement n'a pas pu être validé</p>
+            {% else %}
+                <div style="font-size: 4rem; color: #666; margin-bottom: 20px;" class="status-icon">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <h2>En attente</h2>
+                <p class="text-muted">En attente de validation</p>
+            {% endif %}
+        </div>
+
+        <div class="card" style="background: #f8f9fa; padding: 25px; border-radius: 15px; margin-bottom: 20px;">
+            <h4>Détails du paiement</h4>
+            <hr>
+            <div style="display: flex; justify-content: space-between; margin: 10px 0;">
+                <span><strong>ID Transaction:</strong></span>
+                <span>{{ payment.transaction_id }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin: 10px 0;">
+                <span><strong>Montant:</strong></span>
+                <span><strong>
+                    {% if payment.order and payment.order.product %}
+                        <span class="product-price"
+                              data-amount="{{ payment.amount }}"
+                              data-currency="{{ payment.order.product.currency }}">
+                            {{ payment.amount }} {{ payment.order.product.currency }}
+                        </span>
+                    {% else %}
+                        {% price_in_currency payment.amount 'EUR' %}
+                    {% endif %}
+                </strong></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin: 10px 0;">
+                <span><strong>Méthode:</strong></span>
+                <span>{{ payment.get_payment_method_display }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin: 10px 0;">
+                <span><strong>Statut:</strong></span>
+                <span class="badge bg-{% if payment.status == 'completed' %}success{% elif payment.status == 'failed' %}danger{% else %}warning{% endif %}">
+                    {{ payment.get_status_display }}
+                </span>
+            </div>
+            {% if payment.paid_at %}
+            <div style="display: flex; justify-content: space-between; margin: 10px 0;">
+                <span><strong>Date de paiement:</strong></span>
+                <span>{{ payment.paid_at|date:"d/m/Y H:i" }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if payment.order %}
+        <div class="card" style="background: #f8f9fa; padding: 25px; border-radius: 15px; margin-bottom: 20px;">
+            <h4>Commande associée</h4>
+            <hr>
+            <p><strong>Produit:</strong> {{ payment.order.product.name }}</p>
+            <p><strong>Commande #{{ payment.order.id }}</strong></p>
+            <a href="{% url 'product_detail' payment.order.product.id %}" class="btn btn-outline-primary">
+                <i class="bi bi-eye"></i> Voir le produit
+            </a>
+        </div>
+        {% endif %}
+
+        {% if payment.status == 'processing' %}
+        <div class="alert alert-info text-center">
+            <i class="bi bi-arrow-repeat"></i> Vérification automatique en cours...
+            <br><small>Cette page se mettra à jour automatiquement</small>
+        </div>
+        <script>
+        // Vérifier le statut toutes les 5 secondes
+        setTimeout(() => location.reload(), 5000);
+        </script>
+        {% endif %}
+
+        <div class="text-center mt-4">
+            <a href="{% url 'my_payments' %}" class="btn btn-primary">
+                <i class="bi bi-list"></i> Voir tous mes paiements
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

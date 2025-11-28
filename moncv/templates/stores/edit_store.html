@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Modifier ma boutique{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">
+                    <i class="bi bi-pencil"></i> Modifier ma boutique
+                </h2>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">Nom de la boutique *</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <div class="text-danger small">{{ form.name.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="text-danger small">{{ form.description.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.whatsapp_number.id_for_label }}" class="form-label">Numéro WhatsApp *</label>
+                        {{ form.whatsapp_number }}
+                        <small class="form-text text-muted">Format: +33612345678</small>
+                        {% if form.whatsapp_number.errors %}
+                            <div class="text-danger small">{{ form.whatsapp_number.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.logo.id_for_label }}" class="form-label">Logo de la boutique</label>
+                        {% if store.logo %}
+                            <div class="mb-2">
+                                <img src="{{ store.logo.url }}" alt="Logo actuel" style="max-width: 100px; border-radius: 5px;">
+                            </div>
+                        {% endif %}
+                        {{ form.logo }}
+                        {% if form.logo.errors %}
+                            <div class="text-danger small">{{ form.logo.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'dashboard' %}" class="btn btn-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Enregistrer les modifications
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

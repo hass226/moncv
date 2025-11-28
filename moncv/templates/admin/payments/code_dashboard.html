@@ -1,0 +1,466 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block extrahead %}
+{{ block.super }}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
+<style>
+    .card-counter {
+        box-shadow: 2px 2px 10px #DADADA;
+        margin: 5px;
+        padding: 20px 10px;
+        background-color: #fff;
+        height: 100px;
+        border-radius: 5px;
+        transition: .3s linear all;
+    }
+    .card-counter:hover {
+        box-shadow: 4px 4px 20px #DADADA;
+        transition: .3s linear all;
+    }
+    .card-counter.primary {
+        background-color: #007bff;
+        color: #FFF;
+    }
+    .card-counter.success {
+        background-color: #28a745;
+        color: #FFF;
+    }
+    .card-counter.warning {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    .card-counter.danger {
+        background-color: #dc3545;
+        color: #FFF;
+    }
+    .card-counter .count {
+        font-size: 2rem;
+        font-weight: 700;
+    }
+    .card-counter .count-name {
+        font-size: 0.9rem;
+        opacity: 0.8;
+        margin-top: 5px;
+    }
+    .code-badge {
+        font-family: monospace;
+        font-size: 1.1em;
+        letter-spacing: 1px;
+    }
+    .status-badge {
+        font-size: 0.8em;
+        padding: 3px 8px;
+        border-radius: 10px;
+    }
+    .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    .status-used {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    .status-expired {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+</style>
+{% endblock %}
+
+{% block content_title %}
+<h1>{% trans 'Tableau de bord des codes de vérification' %}</h1>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card-counter primary" title="{{ stats.total }} codes au total">
+                <i class="bi bi-upc-scan"></i>
+                <span class="count">{{ stats.total }}</span>
+                <span class="count-name">{% trans 'Codes générés' %}</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card-counter success" title="{{ stats.used }} codes utilisés">
+                <i class="bi bi-check-circle"></i>
+                <span class="count">{{ stats.used }}</span>
+                <span class="count-name">{% trans 'Codes utilisés' %}</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card-counter warning" title="{{ stats.pending }} codes en attente">
+                <i class="bi bi-hourglass-split"></i>
+                <span class="count">{{ stats.pending }}</span>
+                <span class="count-name">{% trans 'En attente' %}</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card-counter danger" title="{{ stats.expired }} codes expirés">
+                <i class="bi bi-x-circle"></i>
+                <span class="count">{{ stats.expired }}</span>
+                <span class="count-name">{% trans 'Expirés' %}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Boutons d'action -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2>{% trans 'Gestion des codes de vérification' %}</h2>
+                <div>
+                    <a href="{{ export_url }}" class="btn btn-outline-primary me-2">
+                        <i class="bi bi-download"></i> {% trans 'Exporter en CSV' %}
+                    </a>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#generateCodesModal">
+                        <i class="bi bi-plus-circle"></i> {% trans 'Générer des codes' %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="status" class="form-label">{% trans 'Statut' %}</label>
+                            <select name="status" id="status" class="form-select">
+                                <option value="">{% trans 'Tous les statuts' %}</option>
+                                <option value="pending" {% if current_status == 'pending' %}selected{% endif %}>{% trans 'En attente' %}</option>
+                                <option value="used" {% if current_status == 'used' %}selected{% endif %}>{% trans 'Utilisés' %}</option>
+                                <option value="expired" {% if current_status == 'expired' %}selected{% endif %}>{% trans 'Expirés' %}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="store" class="form-label">{% trans 'Boutique' %}</label>
+                            <select name="store" id="store" class="form-select">
+                                <option value="">{% trans 'Toutes les boutiques' %}</option>
+                                {% for store in stores %}
+                                    <option value="{{ store.id }}" {% if current_store|stringformat:'s' == store.id|stringformat:'s' %}selected{% endif %}>
+                                        {{ store.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="bi bi-funnel"></i> {% trans 'Filtrer' %}
+                            </button>
+                            <a href="{% url 'payments:code_dashboard' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tableau des codes -->
+    <div class="card">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">{% trans 'Liste des codes' %}</h5>
+            <div class="d-flex">
+                <div class="btn-group" role="group">
+                    <a href="?sort={% if current_sort == 'created_at' %}-{% endif %}created_at" class="btn btn-sm btn-outline-secondary">
+                        {% trans 'Date' %} {% if current_sort == 'created_at' %}<i class="bi bi-arrow-down"></i>{% elif current_sort == '-created_at' %}<i class="bi bi-arrow-up"></i>{% endif %}
+                    </a>
+                    <a href="?sort={% if current_sort == 'expires_at' %}-{% endif %}expires_at" class="btn btn-sm btn-outline-secondary">
+                        {% trans 'Expiration' %} {% if current_sort == 'expires_at' %}<i class="bi bi-arrow-down"></i>{% elif current_sort == '-expires_at' %}<i class="bi bi-arrow-up"></i>{% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+                <i class="bi bi-key"></i>
+                <span class="count">{{ total_codes }}</span>
+                <span class="count-name">{% trans 'Codes générés' %}</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card-counter warning">
+                <i class="bi bi-hourglass-split"></i>
+                <span class="count">{{ pending_codes }}</span>
+                <span class="count-name">{% trans 'En attente' %}</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card-counter success">
+                <i class="bi bi-check-circle"></i>
+                <span class="count">{{ used_codes }}</span>
+                <span class="count-name">{% trans 'Utilisés' %}</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card-counter danger">
+                <i class="bi bi-x-circle"></i>
+                <span class="count">{{ expired_codes }}</span>
+                <span class="count-name">{% trans 'Expirés' %}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulaire de génération de codes -->
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">{% trans 'Générer des codes de vérification' %}</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{% url 'payments:generate_verification_codes' %}" class="row g-3">
+                {% csrf_token %}
+                
+                <div class="col-md-4">
+                    <label for="store_id" class="form-label">{% trans 'Boutique' %}</label>
+                    <select name="store_id" id="store_id" class="form-select" required>
+                        <option value="">{% trans 'Sélectionnez une boutique' %}</option>
+                        {% for store in stores %}
+                            <option value="{{ store.id }}">{{ store.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-4">
+                    <label for="plan_type" class="form-label">{% trans 'Type d\'abonnement' %}</label>
+                    <select name="plan_type" id="plan_type" class="form-select" required>
+                        {% for value, label in plan_types %}
+                            <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-2">
+                    <label for="count" class="form-label">{% trans 'Nombre' %}</label>
+                    <input type="number" class="form-control" id="count" name="count" min="1" max="50" value="1" required>
+                </div>
+                
+                <div class="col-md-2">
+                    <label for="days_valid" class="form-label">{% trans 'Jours de validité' %}</label>
+                    <input type="number" class="form-control" id="days_valid" name="days_valid" min="1" max="365" value="7" required>
+                </div>
+                
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-key me-1"></i>
+                        {% trans 'Générer les codes' %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Liste des codes -->
+    <div class="card">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">{% trans 'Liste des codes' %}</h5>
+            <div class="d-flex">
+                <form method="get" class="me-2">
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control" placeholder="{% trans 'Rechercher...' %}" value="{{ request.GET.search|default:'' }}">
+                        <button class="btn btn-outline-secondary" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </form>
+                <div class="btn-group" role="group">
+                    <a href="?status=" class="btn btn-outline-secondary {% if not request.GET.status %}active{% endif %}">
+                        {% trans 'Tous' %}
+                    </a>
+                    <a href="?status=pending" class="btn btn-outline-warning {% if request.GET.status == 'pending' %}active{% endif %}">
+                        {% trans 'En attente' %}
+                    </a>
+                    <a href="?status=used" class="btn btn-outline-success {% if request.GET.status == 'used' %}active{% endif %}">
+                        {% trans 'Utilisés' %}
+                    </a>
+                    <a href="?status=expired" class="btn btn-outline-danger {% if request.GET.status == 'expired' %}active{% endif %}">
+                        {% trans 'Expirés' %}
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>{% trans 'Code' %}</th>
+                            <th>{% trans 'Boutique' %}</th>
+                            <th>{% trans 'Formule' %}</th>
+                            <th>{% trans 'Créé par' %}</th>
+                            <th>{% trans 'Date d\'expiration' %}</th>
+                            <th>{% trans 'Statut' %}</th>
+                            <th>{% trans 'Actions' %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for code in object_list %}
+                        <tr>
+                            <td class="code-badge">{{ code.code }}</td>
+                            <td>{{ code.subscription.store.name }}</td>
+                            <td>{{ code.subscription.plan_type|default:'-' }}</td>
+                            <td>{{ code.created_by.get_full_name|default:code.created_by.username }}</td>
+                            <td>{{ code.expires_at|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                {% if code.status == 'pending' %}
+                                    <span class="status-badge status-pending">
+                                        <i class="bi bi-hourglass-split me-1"></i>
+                                        {{ code.get_status_display }}
+                                    </span>
+                                {% elif code.status == 'used' %}
+                                    <span class="status-badge status-used">
+                                        <i class="bi bi-check-circle me-1"></i>
+                                        {{ code.get_status_display }}
+                                    </span>
+                                {% else %}
+                                    <span class="status-badge status-expired">
+                                        <i class="bi bi-x-circle me-1"></i>
+                                        {{ code.get_status_display }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    {% if code.status == 'pending' %}
+                                        <button type="button" 
+                                                class="btn btn-success btn-sm mark-used" 
+                                                data-code-id="{{ code.id }}"
+                                                data-bs-toggle="tooltip" 
+                                                title="{% trans 'Marquer comme utilisé' %}">
+                                            <i class="bi bi-check-lg"></i>
+                                        </button>
+                                    {% endif %}
+                                    <a href="#" 
+                                       class="btn btn-info btn-sm copy-code" 
+                                       data-code="{{ code.code }}"
+                                       data-bs-toggle="tooltip" 
+                                       title="{% trans 'Copier le code' %}">
+                                        <i class="bi bi-clipboard"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <i class="bi bi-inbox text-muted" style="font-size: 2rem;"></i>
+                                <p class="mt-2 mb-0">{% trans 'Aucun code trouvé' %}</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% if is_paginated %}
+        <div class="card-footer bg-white">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                                &laquo; {% trans 'Précédent' %}
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">&laquo; {% trans 'Précédent' %}</span>
+                        </li>
+                    {% endif %}
+                    
+                    {% for i in paginator.page_range %}
+                        {% if page_obj.number == i %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ i }}</span>
+                            </li>
+                        {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ i }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                                    {{ i }}
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                                {% trans 'Suivant' %} &raquo;
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">{% trans 'Suivant' %} &raquo;</span>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    // Activer les tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Copier le code dans le presse-papier
+    document.querySelectorAll('.copy-code').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const code = this.getAttribute('data-code');
+            navigator.clipboard.writeText(code).then(() => {
+                // Changer l'icône temporairement
+                const icon = this.querySelector('i');
+                const originalClass = icon.className;
+                icon.className = 'bi bi-check-lg';
+                
+                // Restaurer l'icône après 2 secondes
+                setTimeout(() => {
+                    icon.className = originalClass;
+                }, 2000);
+            });
+        });
+    });
+
+    // Marquer un code comme utilisé
+    document.querySelectorAll('.mark-used').forEach(button => {
+        button.addEventListener('click', function() {
+            const codeId = this.getAttribute('data-code-id');
+            if (confirm('Êtes-vous sûr de vouloir marquer ce code comme utilisé ?')) {
+                fetch(`/payments/admin/codes/${codeId}/mark-used/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFTTOKEN': '{{ csrf_token }}',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Recharger la page pour voir les changements
+                        window.location.reload();
+                    } else {
+                        alert(data.error || 'Une erreur est survenue');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Une erreur est survenue lors de la mise à jour du code');
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

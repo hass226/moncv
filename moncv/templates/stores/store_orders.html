@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load currency_tags %}
+
+{% block title %}Mes Commandes - MYMEDAGA{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 50px;">
+    <h1 class="display-5 mb-4">
+        <i class="bi bi-cart-check"></i> Gestion des Commandes
+    </h1>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card text-center" style="border-radius: 15px;">
+                <div class="card-body">
+                    <div class="stat-number" style="font-size: 2rem;">{{ stats.total }}</div>
+                    <small class="text-muted">Total</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center" style="border-radius: 15px; background: rgba(255, 184, 1, 0.1);">
+                <div class="card-body">
+                    <div class="stat-number" style="font-size: 2rem; color: var(--primary-yellow);">{{ stats.pending }}</div>
+                    <small class="text-muted">En attente</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center" style="border-radius: 15px; background: rgba(0, 123, 255, 0.1);">
+                <div class="card-body">
+                    <div class="stat-number" style="font-size: 2rem; color: #007bff;">{{ stats.confirmed }}</div>
+                    <small class="text-muted">Confirmées</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center" style="border-radius: 15px; background: rgba(255, 107, 53, 0.1);">
+                <div class="card-body">
+                    <div class="stat-number" style="font-size: 2rem; color: var(--primary-orange);">{{ stats.preparing }}</div>
+                    <small class="text-muted">En préparation</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center" style="border-radius: 15px; background: rgba(0, 200, 150, 0.1);">
+                <div class="card-body">
+                    <div class="stat-number" style="font-size: 2rem; color: var(--primary-green);">{{ stats.delivered }}</div>
+                    <small class="text-muted">Livrées</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="mb-3">
+        <a href="{% url 'store_orders' %}" class="btn btn-sm {% if not status_filter %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            Toutes
+        </a>
+        <a href="{% url 'store_orders' %}?status=pending" class="btn btn-sm {% if status_filter == 'pending' %}btn-warning{% else %}btn-outline-warning{% endif %}">
+            En attente
+        </a>
+        <a href="{% url 'store_orders' %}?status=confirmed" class="btn btn-sm {% if status_filter == 'confirmed' %}btn-info{% else %}btn-outline-info{% endif %}">
+            Confirmées
+        </a>
+        <a href="{% url 'store_orders' %}?status=preparing" class="btn btn-sm {% if status_filter == 'preparing' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            En préparation
+        </a>
+        <a href="{% url 'store_orders' %}?status=delivered" class="btn btn-sm {% if status_filter == 'delivered' %}btn-success{% else %}btn-outline-success{% endif %}">
+            Livrées
+        </a>
+    </div>
+
+    <!-- Liste des commandes -->
+    <div class="table-responsive">
+        <table class="table table-hover" style="background: white; border-radius: 15px; overflow: hidden;">
+            <thead style="background: linear-gradient(135deg, var(--primary-orange), var(--primary-red)); color: white;">
+                <tr>
+                    <th>ID</th>
+                    <th>Produit</th>
+                    <th>Client</th>
+                    <th>Montant</th>
+                    <th>Paiement</th>
+                    <th>Statut</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td><strong>#{{ order.id }}</strong></td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <img src="{{ order.product.image.url }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
+                            <div>
+                                <strong>{{ order.product.name }}</strong><br>
+                                <small class="text-muted">Qty: {{ order.quantity }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div>
+                            <strong>{{ order.customer_name|default:order.customer.username|default:"Anonyme" }}</strong><br>
+                            <small class="text-muted">{{ order.customer_phone }}</small>
+                        </div>
+                    </td>
+                    <td>
+                        <strong>{% price_in_currency order.get_total_with_delivery 'EUR' %}</strong>
+                    </td>
+                    <td>
+                        <span class="badge bg-{% if order.payment_status == 'completed' %}success{% elif order.payment_status == 'processing' %}warning{% else %}secondary{% endif %}">
+                            {{ order.get_payment_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge bg-{% if order.status == 'delivered' %}success{% elif order.status == 'pending' %}warning{% elif order.status == 'confirmed' %}info{% else %}primary{% endif %}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </td>
+                    <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#orderModal{{ order.id }}">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            {% if order.status != 'delivered' %}
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-sm btn-outline-success dropdown-toggle" data-bs-toggle="dropdown">
+                                    <i class="bi bi-arrow-right-circle"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="updateStatus({{ order.id }}, 'confirmed')">Confirmer</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="updateStatus({{ order.id }}, 'preparing')">En préparation</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="updateStatus({{ order.id }}, 'ready')">Prête</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="updateStatus({{ order.id }}, 'shipped')">Expédiée</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="updateStatus({{ order.id }}, 'delivered')">Livrée</a></li>
+                                </ul>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                
+                <!-- Modal pour les détails -->
+                <div class="modal fade" id="orderModal{{ order.id }}" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Commande #{{ order.id }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <h6>Produit</h6>
+                                        <p><strong>{{ order.product.name }}</strong><br>
+                                        Quantité: {{ order.quantity }}<br>
+                                        Prix unitaire: {% price_in_currency order.unit_price 'EUR' %}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Montant</h6>
+                                        <p>Sous-total: {% price_in_currency order.total_price 'EUR' %}<br>
+                                        Frais de livraison: {% price_in_currency order.delivery_fee 'EUR' %}<br>
+                                        <strong>Total: {% price_in_currency order.get_total_with_delivery 'EUR' %}</strong></p>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <h6>Client</h6>
+                                        <p>{{ order.customer_name }}<br>
+                                        {{ order.customer_phone }}<br>
+                                        {{ order.customer_email|default:"" }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Livraison</h6>
+                                        <p>{{ order.address }}<br>
+                                        {{ order.city }} {{ order.postal_code }}<br>
+                                        {% if order.latitude and order.longitude %}
+                                        <a href="{{ order.get_google_maps_link }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-geo-alt"></i> Voir sur la carte
+                                        </a>
+                                        {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                                {% if order.notes %}
+                                <hr>
+                                <div>
+                                    <h6>Notes du client</h6>
+                                    <p>{{ order.notes }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-5">
+                        <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+                        <p class="mt-3 text-muted">Aucune commande pour le moment</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<form id="status-form" method="post" action="" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="status" id="status-input">
+    <input type="hidden" name="tracking_number" id="tracking-input">
+</form>
+
+<script>
+function updateStatus(orderId, status) {
+    const form = document.getElementById('status-form');
+    form.action = `/order/${orderId}/update-status/`;
+    document.getElementById('status-input').value = status;
+    form.submit();
+}
+</script>
+{% endblock %}
+

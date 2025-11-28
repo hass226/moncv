@@ -1,0 +1,359 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load currency_tags %}
+
+{% block title %}Paiement - Commande #{{ order.id }} - MYMEDAGA{% endblock %}
+
+{% block extra_js %}
+<script>
+// Gestion dynamique du paiement : méthode sélectionnée, champs affichés, bouton activé/désactivé, loader au submit
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('payment-form');
+    const submitBtn = document.getElementById('payment-submit');
+    const loadingDiv = document.getElementById('payment-loading');
+    const phoneGroup = document.getElementById('phone-group');
+    const phoneInput = document.querySelector('input[name="phone_number"]');
+    const methodSelect = document.querySelector('select[name="payment_method"]');
+    const methodInfo = document.getElementById('selected-payment-method');
+    const stripeSection = document.getElementById('stripe-order-section');
+
+    function isStripeSelected() {
+        return methodSelect && methodSelect.value === 'stripe';
+    }
+
+    function updateMethodInfo() {
+        if (!methodInfo || !methodSelect) return;
+        const label = methodSelect.options[methodSelect.selectedIndex]?.text || '';
+        if (!label) {
+            methodInfo.textContent = '';
+            methodInfo.style.display = 'none';
+            return;
+        }
+
+        if (isStripeSelected()) {
+            methodInfo.textContent = 'Vous avez choisi Stripe : utilisez le bouton "Payer par carte avec Stripe" ci-dessous.';
+        } else {
+            methodInfo.textContent = 'Vous avez choisi : ' + label + '. Le paiement se fera via Mobile Money / fournisseur local.';
+        }
+        methodInfo.style.display = 'block';
+    }
+
+    function updateVisibility() {
+        const stripe = isStripeSelected();
+
+        if (phoneGroup) {
+            phoneGroup.style.display = stripe ? 'none' : 'block';
+        }
+
+        if (submitBtn) {
+            // Le bouton formulaire est utilisé uniquement pour les méthodes non-Stripe
+            submitBtn.style.display = stripe ? 'none' : 'block';
+        }
+
+        if (stripeSection) {
+            stripeSection.style.display = stripe ? 'block' : 'none';
+        }
+    }
+
+    function updateButtonState() {
+        if (!submitBtn) return;
+        if (isStripeSelected()) {
+            // Le bouton Stripe est géré séparément, on ne touche pas ici
+            submitBtn.disabled = true;
+            return;
+        }
+        const phoneOk = phoneInput && phoneInput.value.trim().length >= 8;
+        const methodOk = methodSelect && methodSelect.value && !isStripeSelected();
+        submitBtn.disabled = !(phoneOk && methodOk);
+    }
+
+    if (methodSelect) {
+        methodSelect.addEventListener('change', function() {
+            updateMethodInfo();
+            updateVisibility();
+            updateButtonState();
+        });
+    }
+
+    if (phoneInput) {
+        phoneInput.addEventListener('input', updateButtonState);
+    }
+
+    // État initial
+    updateMethodInfo();
+    updateVisibility();
+    updateButtonState();
+
+    // Loader au submit
+    if (form && submitBtn && loadingDiv) {
+        form.addEventListener('submit', function() {
+            submitBtn.disabled = true;
+            loadingDiv.style.display = 'block';
+        });
+    }
+});
+</script>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+// Paiement commande avec Stripe (PaymentIntent + Elements)
+document.addEventListener('DOMContentLoaded', function() {
+    const stripeBtn = document.getElementById('stripe-order-btn');
+    const stripeError = document.getElementById('stripe-order-error');
+    const cardContainer = document.getElementById('card-element-order');
+
+    if (!stripeBtn || !cardContainer) return;
+
+    let stripeInstance = null;
+    let cardElement = null;
+
+    async function ensureStripeInitialized() {
+        if (stripeInstance && cardElement) return;
+
+        // On récupère une PaymentIntent pour obtenir aussi la publishableKey
+        const res = await fetch("{% url 'create_stripe_payment_intent' order.id %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+            if (stripeError) {
+                stripeError.textContent = data.error || 'Erreur Stripe';
+            }
+            throw new Error(data.error || 'Erreur Stripe');
+        }
+
+        stripeInstance = Stripe(data.publishableKey);
+        const elements = stripeInstance.elements();
+        cardElement = elements.create('card');
+        cardElement.mount('#card-element-order');
+
+        return data.clientSecret;
+    }
+
+    stripeBtn.addEventListener('click', async function (e) {
+        e.preventDefault();
+        if (stripeError) {
+            stripeError.textContent = '';
+        }
+
+        try {
+            const clientSecret = await ensureStripeInitialized();
+
+            const { error } = await stripeInstance.confirmCardPayment(clientSecret, {
+                payment_method: {
+                    card: cardElement,
+                },
+            });
+
+            if (error) {
+                if (stripeError) {
+                    stripeError.textContent = error.message;
+                }
+            } else {
+                window.location.href = "{% url 'store_orders' %}";
+            }
+        } catch (e) {
+            if (stripeError) {
+                stripeError.textContent = e.message || 'Erreur réseau';
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 30px 20px;
+    }
+
+    .payment-card {
+        background: rgba(255, 255, 255, 0.98);
+        border-radius: 25px;
+        padding: 40px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    }
+
+    .order-summary {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+
+    .security-badge {
+        background: linear-gradient(135deg, var(--primary-green), #00A878);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 0.9rem;
+    }
+
+    .phone-input-group {
+        position: relative;
+    }
+
+    .phone-prefix {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #666;
+        font-weight: 600;
+    }
+
+    .phone-input {
+        padding-left: 60px;
+    }
+
+    .validation-info {
+        background: rgba(255, 184, 1, 0.1);
+        border-left: 4px solid var(--primary-yellow);
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 15px;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="payment-container">
+    <div class="payment-card">
+        <h1 class="display-5 mb-4 text-center">
+            <i class="bi bi-credit-card"></i> Paiement sécurisé
+        </h1>
+
+        <div class="security-badge">
+            <i class="bi bi-shield-check"></i> Validation côté serveur - Transactions sécurisées
+        </div>
+
+        <!-- Montant principal -->
+        <div style="text-align: center; margin-bottom: 20px;">
+            <div class="product-price" 
+                 style="font-size: 2rem; font-weight: 800; color: var(--primary-orange);"
+                 data-amount="{{ order.get_total_with_delivery }}"
+                 data-currency="{{ order.product.currency }}">
+                {{ order.get_total_with_delivery }} {{ order.product.currency }}
+            </div>
+            <small class="text-muted">Montant total à payer (affiché dans {{ current_currency }})</small>
+        </div>
+
+        <!-- Résumé de la commande détaillé -->
+        <div class="order-summary">
+            <h4>Commande #{{ order.id }}</h4>
+            <hr>
+            <div style="display: flex; justify-content: space-between; margin: 10px 0;">
+                <span>{{ order.product.name }}</span>
+                <strong class="product-price"
+                        data-amount="{{ order.unit_price }}"
+                        data-currency="{{ order.product.currency }}">
+                    {{ order.unit_price }} {{ order.product.currency }}
+                </strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin: 10px 0;">
+                <span>Quantité: {{ order.quantity }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin: 10px 0%;">
+                <span>Frais de livraison:</span>
+                <strong class="product-price"
+                        data-amount="{{ order.delivery_fee }}"
+                        data-currency="{{ order.product.currency }}">
+                    {{ order.delivery_fee }} {{ order.product.currency }}
+                </strong>
+            </div>
+            <hr>
+            <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: 700; color: var(--primary-orange);">
+                <span>Total:</span>
+                <span class="product-price"
+                      data-amount="{{ order.get_total_with_delivery }}"
+                      data-currency="{{ order.product.currency }}">
+                    {{ order.get_total_with_delivery }} {{ order.product.currency }}
+                </span>
+            </div>
+        </div>
+
+        <form method="post" id="payment-form">
+            {% csrf_token %}
+            
+            <div class="form-group mb-4" id="phone-group">
+                <label class="form-label">
+                    <i class="bi bi-phone"></i> Numéro de téléphone *
+                </label>
+                <div class="phone-input-group">
+                    <span class="phone-prefix">+</span>
+                    <input type="tel" 
+                           name="phone_number" 
+                           class="form-control phone-input" 
+                           placeholder="Ex: 225 07 12 34 56 78"
+                           required
+                           pattern="[0-9\s\+\-]+"
+                           minlength="8">
+                </div>
+                <small class="text-muted">
+                    Le numéro sera validé par le fournisseur de paiement
+                </small>
+            </div>
+
+            <div class="form-group mb-4">
+                <label class="form-label">
+                    <i class="bi bi-wallet2"></i> Méthode de paiement *
+                </label>
+                <select name="payment_method" class="form-control" required>
+                    {% for code, label in payment_methods %}
+                        {% if code != 'stripe' or stripe_available %}
+                            <option value="{{ code }}">{{ label }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div id="selected-payment-method" class="text-muted" style="display: none; margin-bottom: 10px; font-size: 0.95rem;"></div>
+
+            <div class="validation-info">
+                <strong><i class="bi bi-info-circle"></i> Important:</strong><br>
+                - Le paiement sera validé côté serveur par le fournisseur<br>
+                - Vous recevrez une confirmation une fois le paiement vérifié<br>
+                - En cas de problème, contactez le support<br>
+                {% if not stripe_available %}
+                    - Les paiements par carte Stripe ne sont pas encore disponibles pour ce vendeur.
+                {% endif %}
+            </div>
+
+            <div id="payment-loading" style="display: none; margin-top: 15px; text-align: center; font-size: 0.95rem; color: #555;">
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <span style="margin-left: 8px;">Redirection vers le système de paiement...</span>
+            </div>
+
+            <button type="submit" id="payment-submit" class="btn-checkout" style="width: 100%; margin-top: 25px;" disabled>
+                <i class="bi bi-lock-fill"></i> Payer maintenant
+            </button>
+        </form>
+        
+        <div id="stripe-order-section" style="display:none; margin-top: 25px;">
+            <hr class="my-4">
+
+            <div class="text-center mb-2">
+                <strong>Ou payer par carte avec Stripe :</strong>
+            </div>
+
+            <div id="card-element-order" class="form-control" style="padding-top: 10px; padding-bottom: 10px; margin-bottom: 10px;"></div>
+            <div id="stripe-order-error" style="color:red; font-size:0.9rem; margin-bottom:10px;"></div>
+
+            <button id="stripe-order-btn" class="btn btn-outline-primary w-100">
+                <i class="bi bi-credit-card"></i> Payer par carte avec Stripe
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

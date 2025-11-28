@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Vérifier ma boutique - MYMEDAGA{% endblock %}
+
+{% block extra_css %}
+<style>
+    .subscription-card {
+        background: linear-gradient(135deg, rgba(10, 14, 39, 0.95), rgba(114, 9, 183, 0.8));
+        backdrop-filter: blur(10px);
+        border-radius: 30px;
+        padding: 40px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        border: 2px solid var(--primary-yellow);
+    }
+
+    .price-display {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 4rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, var(--primary-yellow), var(--primary-orange));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-align: center;
+        margin: 20px 0;
+    }
+
+    .benefits-list {
+        list-style: none;
+        padding: 0;
+    }
+
+    .benefits-list li {
+        padding: 15px;
+        margin: 10px 0;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        border-left: 4px solid var(--primary-yellow);
+        color: white;
+    }
+
+    .benefits-list li i {
+        color: var(--primary-yellow);
+        margin-right: 10px;
+        font-size: 1.2rem;
+    }
+
+    .payment-method-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 20px;
+        margin: 10px 0;
+        border: 2px solid transparent;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+    .payment-method-card:hover {
+        border-color: var(--primary-orange);
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(255, 107, 53, 0.3);
+    }
+
+    .payment-method-card.selected {
+        border-color: var(--primary-yellow);
+        background: rgba(247, 184, 1, 0.1);
+    }
+
+    .payment-icon {
+        font-size: 2rem;
+        margin-right: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="subscription-card">
+            <div class="text-center mb-4">
+                <h1 class="display-4" style="color: white; margin-bottom: 10px;">
+                    <i class="bi bi-shield-check"></i> Vérifiez votre boutique
+                </h1>
+                <p style="color: rgba(255,255,255,0.8); font-size: 1.2rem;">
+                    Obtenez le badge de vérification et boostez votre crédibilité
+                </p>
+            </div>
+
+            <div class="price-display">8 000 FCFA</div>
+            <p class="text-center text-white-50 mb-4">(soit environ {{ 8000|intcomma }} FCFA)</p>
+            <p class="text-center" style="color: rgba(255,255,255,0.8); margin-bottom: 30px;">
+                pour 6 mois de vérification (prix de référence 8€ – converti dans {{ current_currency }} lors du paiement)
+            </p>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h3 style="color: var(--primary-yellow); margin-bottom: 20px;">
+                        <i class="bi bi-star-fill"></i> Avantages
+                    </h3>
+                    <ul class="benefits-list">
+                        <li>
+                            <i class="bi bi-check-circle-fill"></i>
+                            Badge de vérification visible sur votre boutique
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill"></i>
+                            Apparition dans la section "Boutiques Vérifiées"
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill"></i>
+                            Augmentation de la confiance des clients
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill"></i>
+                            Priorité dans les résultats de recherche
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill"></i>
+                            Support client prioritaire
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="col-md-6">
+                    <h3 style="color: var(--primary-yellow); margin-bottom: 20px;">
+                        <i class="bi bi-credit-card"></i> Abonnement
+                    </h3>
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <p style="color: rgba(255,255,255,0.8);">
+                            En confirmant, votre demande d'abonnement sera créée et vous serez redirigé vers la page de paiement sécurisé pour choisir votre moyen de paiement.
+                        </p>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg" style="border-radius: 25px; padding: 15px;">
+                                <i class="bi bi-check-circle"></i> Confirmer l'abonnement
+                            </button>
+                            <a href="{% url 'dashboard' %}" class="btn btn-outline-light btn-lg" style="border-radius: 25px; padding: 15px;">
+                                <i class="bi bi-arrow-left"></i> Retour au dashboard
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Aucun choix de méthode de paiement ici : tout se fait sur la page de paiement sécurisée.
+</script>
+{% endblock %}
+

@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+{% load currency_tags %}
+
+{% block title %}Recherche - MYMEDAGA{% endblock %}
+
+{% block extra_css %}
+<style>
+    .search-hero {
+        background: linear-gradient(135deg, rgba(10, 14, 39, 0.95), rgba(114, 9, 183, 0.8));
+        border-radius: 30px;
+        padding: 40px;
+        margin-bottom: 30px;
+    }
+
+    .filter-sidebar {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 25px;
+        position: sticky;
+        top: 100px;
+    }
+
+    .filter-section {
+        margin-bottom: 25px;
+        padding-bottom: 25px;
+        border-bottom: 2px solid #e0e0e0;
+    }
+
+    .filter-section:last-child {
+        border-bottom: none;
+    }
+
+    .filter-title {
+        font-family: 'Orbitron', sans-serif;
+        font-weight: 700;
+        color: var(--primary-orange);
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-hero">
+    <div class="text-center">
+        <h1 class="display-4" style="color: white; margin-bottom: 20px;">
+            <i class="bi bi-search"></i> Recherche
+        </h1>
+        <form method="get" action="{% url 'search' %}" class="row g-3 justify-content-center">
+            <div class="col-md-8">
+                <input type="text" name="q" class="form-control form-control-lg" 
+                       placeholder="Rechercher un produit..." 
+                       value="{{ query }}" 
+                       style="border-radius: 25px; padding: 15px 25px;">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary btn-lg w-100" 
+                        style="border-radius: 25px; padding: 15px;">
+                    <i class="bi bi-search"></i> Rechercher
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="filter-sidebar">
+            <h3 class="filter-title">Filtres</h3>
+            
+            <form method="get" action="{% url 'search' %}">
+                {% if query %}
+                <input type="hidden" name="q" value="{{ query }}">
+                {% endif %}
+
+                <div class="filter-section">
+                    <h5 class="filter-title">Catégorie</h5>
+                    <select name="category" class="form-control" onchange="this.form.submit()">
+                        <option value="">Toutes les catégories</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>
+                            {{ category.name }} ({{ category.product_count }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-section">
+                    <h5 class="filter-title">Prix</h5>
+                    <div class="mb-2">
+                        <label class="form-label">Min (€)</label>
+                        <input type="number" name="min_price" class="form-control" 
+                               value="{{ min_price }}" placeholder="0" step="0.01">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Max (€)</label>
+                        <input type="number" name="max_price" class="form-control" 
+                               value="{{ max_price }}" placeholder="1000" step="0.01">
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary w-100">Appliquer</button>
+                </div>
+
+                <div class="filter-section">
+                    <h5 class="filter-title">Trier par</h5>
+                    <select name="sort" class="form-control" onchange="this.form.submit()">
+                        <option value="relevance" {% if sort_by == 'relevance' %}selected{% endif %}>Pertinence</option>
+                        <option value="popular" {% if sort_by == 'popular' %}selected{% endif %}>Plus populaires</option>
+                        <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Plus récents</option>
+                        <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Prix croissant</option>
+                        <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Prix décroissant</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        {% if query %}
+        <div class="mb-3">
+            <h4>Résultats pour "{{ query }}" ({{ page_obj.paginator.count }})</h4>
+        </div>
+        {% endif %}
+
+        <div class="row g-4">
+            {% for product in page_obj %}
+            <div class="col-md-4 col-lg-3">
+                <div class="card product-card h-100">
+                    {% if product.is_currently_featured %}
+                    <span class="featured-badge">
+                        <i class="bi bi-star-fill"></i> En Vedette
+                    </span>
+                    {% endif %}
+                    {% if product.store.is_verified %}
+                    <span class="verified-badge">
+                        <i class="bi bi-check-circle-fill"></i> Vérifié
+                    </span>
+                    {% endif %}
+                    <a href="{% url 'product_detail' product.id %}">
+                        <img src="{{ product.image.url }}" class="card-img-top product-image" alt="{{ product.name }}">
+                    </a>
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">
+                            <a href="{% url 'product_detail' product.id %}" style="text-decoration: none; color: inherit;">
+                                {{ product.name }}
+                            </a>
+                        </h5>
+                        <p class="card-text text-muted small">{{ product.description|truncatewords:15 }}</p>
+                        <div class="mt-auto">
+                            <p class="product-price" data-price-eur="{{ product.price }}">
+                                {% price_in_currency product.price 'EUR' %}
+                            </p>
+                            <small class="text-muted" style="font-size: 0.7rem; display: block; margin-top: 5px;">
+                                {% price_in_all_currencies product.price %}
+                            </small>
+                            <div class="d-flex gap-2 mb-2">
+                                <small class="text-muted">
+                                    <i class="bi bi-heart"></i> {{ product.likes_count }}
+                                </small>
+                                <small class="text-muted">
+                                    <i class="bi bi-chat"></i> {{ product.comments.count }}
+                                </small>
+                                <small class="text-muted">
+                                    <i class="bi bi-eye"></i> {{ product.views_count }}
+                                </small>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'product_detail' product.id %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-eye"></i> Voir détails
+                                </a>
+                                <button onclick="commanderAvecLocalisation({{ product.id }}, '{{ product.name|escapejs }}', '{{ product.price }}', '{{ product.store.whatsapp_number }}')" 
+                                        class="whatsapp-btn text-center" style="border: none; cursor: pointer; width: 100%;">
+                                    <span><i class="bi bi-whatsapp"></i> <i class="bi bi-geo-alt"></i> Commander</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info text-center" style="background: rgba(255,255,255,0.95); border-radius: 20px; padding: 40px;">
+                    <i class="bi bi-info-circle" style="font-size: 3rem; color: var(--primary-orange);"></i>
+                    <h4 style="margin-top: 20px;">Aucun résultat trouvé</h4>
+                    <p>Essayez avec d'autres mots-clés ou modifiez vos filtres.</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-5">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if query %}q={{ query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}page=1">
+                            <i class="bi bi-chevron-double-left"></i> Premier
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if query %}q={{ query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}page={{ page_obj.previous_page_number }}">
+                            <i class="bi bi-chevron-left"></i> Précédent
+                        </a>
+                    </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if query %}q={{ query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}page={{ page_obj.next_page_number }}">
+                            Suivant <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if query %}q={{ query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}page={{ page_obj.paginator.num_pages }}">
+                            Dernier <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const searchForm = document.querySelector('.search-hero form');
+    const searchInput = searchForm ? searchForm.querySelector('input[name="q"]') : null;
+
+    const filterForm = document.querySelector('.filter-sidebar form');
+    const minPriceInput = filterForm ? filterForm.querySelector('input[name="min_price"]') : null;
+    const maxPriceInput = filterForm ? filterForm.querySelector('input[name="max_price"]') : null;
+
+    const delay = 500;
+
+    if (searchForm && searchInput) {
+        let typingTimer = null;
+        searchInput.addEventListener('input', function () {
+            if (typingTimer) clearTimeout(typingTimer);
+            typingTimer = setTimeout(function () {
+                searchForm.submit();
+            }, delay);
+        });
+    }
+
+    if (filterForm) {
+        let priceTimer = null;
+        const autoSubmit = () => {
+            filterForm.submit();
+        };
+
+        if (minPriceInput) {
+            minPriceInput.addEventListener('input', function () {
+                if (priceTimer) clearTimeout(priceTimer);
+                priceTimer = setTimeout(autoSubmit, delay);
+            });
+        }
+
+        if (maxPriceInput) {
+            maxPriceInput.addEventListener('input', function () {
+                if (priceTimer) clearTimeout(priceTimer);
+                priceTimer = setTimeout(autoSubmit, delay);
+            });
+        }
+    }
+});
+</script>
+{% endblock %}

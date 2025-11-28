@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load i18n static %}
+
+{% block title %}{% trans 'Instructions de Paiement' %}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">{% trans 'Instructions de Paiement' %}</h2>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h4 class="alert-heading">{% trans 'Comment effectuer votre paiement' %}</h4>
+                        <p>{% trans 'Veuillez effectuer le paiement via l\'une des méthodes ci-dessous :' %}</p>
+                    </div>
+
+                    <div class="mt-4">
+                        <h4>{% trans '1. Paiement Mobile Money' %}</h4>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{% trans 'Moov Money' %}</h5>
+                                        <p class="card-text">
+                                            <strong>{% trans 'Numéro :' %}</strong><br>
+                                            +226 01256984
+                                        </p>
+                                        <p class="text-muted small">{% trans 'Code USSD : *133#' %}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{% trans 'Orange Money' %}</h5>
+                                        <p class="card-text">
+                                            <strong>{% trans 'Numéro :' %}</strong><br>
+                                            +226 04647641
+                                        </p>
+                                        <p class="text-muted small">{% trans 'Code USSD : #144#' %}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{% trans 'Wave' %}</h5>
+                                        <p class="card-text">
+                                            <strong>{% trans 'Numéro :' %}</strong><br>
+                                            +226 58485509
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h4 class="mt-4">{% trans '2. Confirmation de Paiement' %}</h4>
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <p>{% trans 'Après avoir effectué le paiement, veuillez :' %}</p>
+                                <ol>
+                                    <li>{% trans 'Prendre une capture d\'écran de la confirmation de paiement' %}</li>
+                                    <li>{% trans 'Envoyer la capture d\'écran sur WhatsApp au' %} 
+                                        <a href="https://wa.me/22601256984" target="_blank" class="text-success">
+                                            <i class="fab fa-whatsapp"></i> +226 01 25 69 84
+                                        </a>
+                                    </li>
+                                    <li>{% trans 'Notre équipe validera votre paiement sous 24h' %}</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <a href="{% url 'stores:dashboard' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                {% trans 'Retour au tableau de bord' %}
+                            </a>
+                            <a href="{% url 'payments:verify_payment_code' %}" class="btn btn-primary">
+                                <i class="fas fa-check-circle me-2"></i>
+                                {% trans 'J\'ai déjà payé, vérifier mon code' %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        transition: transform 0.2s;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .payment-method-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        color: #0d6efd;
+    }
+</style>
+{% endblock %}

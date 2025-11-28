@@ -1,0 +1,441 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ classroom.name }} - Classroom{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="card border-0 shadow-lg mb-4" style="border-radius: 20px;">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h2 class="fw-bold mb-2">{{ classroom.name }}</h2>
+                    {% if classroom.course_code %}
+                    <p class="text-muted mb-1"><i class="bi bi-code me-2"></i>{{ classroom.course_code }}</p>
+                    {% endif %}
+                    {% if classroom.university %}
+                    <p class="text-muted mb-0"><i class="bi bi-mortarboard me-2"></i>{{ classroom.university }}</p>
+                    {% endif %}
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-primary px-3 py-2">{{ classroom.members_count }} membres</span>
+                    {% if not is_member %}
+                    <button onclick="joinClassroom()" class="btn btn-success ms-2 rounded-pill">
+                        <i class="bi bi-plus me-2"></i>Rejoindre
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% if classroom.description %}
+            <p class="mt-3 mb-0">{{ classroom.description }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Posts -->
+            <div class="card border-0 shadow-lg mb-4" style="border-radius: 20px;">
+                <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #00C896, #4facfe); border: none;">
+                    <h5 class="mb-0"><i class="bi bi-chat-dots me-2"></i>Posts</h5>
+                </div>
+                <div class="card-body p-4">
+                    {% if is_member %}
+                    <form id="class-post-form" method="post" action="{% url 'add_class_post' classroom.id %}" class="mb-4" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-2">
+                            <input type="text" name="title" class="form-control" placeholder="Titre (optionnel)">
+                        </div>
+                        <div class="mb-2">
+                            <textarea name="content" class="form-control" rows="3" placeholder="Écrire un message pour la classe..."></textarea>
+                        </div>
+                        <div class="mb-2">
+                            <div class="input-group">
+                                <label class="input-group-text" for="file-upload">
+                                    <i class="bi bi-paperclip"></i>
+                                </label>
+                                <input type="file" class="form-control" id="file-upload" name="file">
+                            </div>
+                            <small class="text-muted">Taille maximale : 10MB</small>
+                        </div>
+                        <input type="hidden" name="post_type" value="discussion">
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-sm btn-primary rounded-pill">
+                                <i class="bi bi-send me-1"></i>Publier
+                            </button>
+                        </div>
+                    </form>
+                    <hr>
+                    {% endif %}
+                    {% for post in posts %}
+                    <div class="post-item p-3 mb-3 rounded-4" style="background: #f8f9fa; border-left: 4px solid #00C896;">
+                        <div class="d-flex align-items-start mb-2">
+                            <div class="avatar-circle me-3" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                                {{ post.author.username|first|upper }}
+                            </div>
+                            <div class="flex-grow-1">
+                                <strong>{{ post.author.username }}</strong>
+                                <span class="badge bg-secondary ms-2">{{ post.get_post_type_display }}</span>
+                                <small class="text-muted d-block">{{ post.created_at|timesince }} ago</small>
+                            </div>
+                        </div>
+                        {% if post.title %}
+                        <h6 class="fw-bold mb-2">{{ post.title }}</h6>
+                        {% endif %}
+                        <p class="mb-2">{{ post.content|linebreaks }}</p>
+                        
+                        {% if post.file %}
+                        <div class="mb-2">
+                            <a href="{{ post.file.url }}" class="btn btn-sm btn-outline-info" target="_blank">
+                                <i class="bi bi-download me-1"></i>{{ post.file.name|slice:":30" }}{% if post.file.name|length > 30 %}...{% endif %}
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-primary rounded-pill like-btn" 
+                                    data-post-id="{{ post.id }}" 
+                                    data-liked="{% if request.user in post.likes.all %}true{% else %}false{% endif %}">
+                                <i class="bi {% if request.user in post.likes.all %}bi-heart-fill text-danger{% else %}bi-heart{% endif %} me-1"></i>
+                                <span class="like-count">{{ post.likes_count }}</span>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill">
+                                <i class="bi bi-chat me-1"></i>{{ post.comments_count }}
+                            </button>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center py-4">Aucun post pour le moment</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="card border-0 shadow-lg mb-4" style="border-radius: 20px;">
+                <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #FF6B35, #E63946); border: none;">
+                    <h5 class="mb-0"><i class="bi bi-file-text me-2"></i>Notes Collaboratives</h5>
+                </div>
+                <div class="card-body p-4">
+                    {% if is_member %}
+                    <form method="post" action="{% url 'add_class_note' classroom.id %}" class="mb-4">
+                        {% csrf_token %}
+                        <div class="mb-2">
+                            <input type="text" name="title" class="form-control" placeholder="Titre de la note" required>
+                        </div>
+                        <div class="mb-2">
+                            <input type="text" name="topic" class="form-control" placeholder="Sujet (optionnel)">
+                        </div>
+                        <div class="mb-2">
+                            <textarea name="content" class="form-control" rows="3" placeholder="Contenu de la note" required></textarea>
+                        </div>
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-sm btn-outline-light rounded-pill">
+                                <i class="bi bi-plus-lg me-1"></i>Ajouter une note
+                            </button>
+                        </div>
+                    </form>
+                    <hr>
+                    {% endif %}
+                    {% if notes %}
+                        {% for note in notes %}
+                        <div class="note-item p-3 mb-3 rounded-4" style="background: #f8f9fa;">
+                            <h6 class="fw-bold mb-1">{{ note.title }}</h6>
+                            {% if note.topic %}
+                            <small class="text-muted d-block mb-2"><i class="bi bi-tag me-1"></i>{{ note.topic }}</small>
+                            {% endif %}
+                            <p class="small mb-2">{{ note.content|truncatewords:30 }}</p>
+                            <small class="text-muted">Par {{ note.author.username }} • {{ note.updated_at|timesince }} ago</small>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center mb-0">Aucune note pour le moment</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Tutorials -->
+            <div class="card border-0 shadow-lg" style="border-radius: 20px;">
+                <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #F7B801, #FF6B35); border: none;">
+                    <h5 class="mb-0"><i class="bi bi-play-circle me-2"></i>Tutoriels</h5>
+                </div>
+                <div class="card-body p-4">
+                    {% if is_member %}
+                    <form method="post" action="{% url 'add_tutorial' classroom.id %}" class="mb-4" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-2">
+                            <input type="text" name="title" class="form-control" placeholder="Titre du tutoriel" required>
+                        </div>
+                        <div class="mb-2">
+                            <textarea name="description" class="form-control" rows="2" placeholder="Description (optionnel)"></textarea>
+                        </div>
+                        <div class="mb-2">
+                            <input type="url" name="video_url" class="form-control" placeholder="Lien vidéo (YouTube, etc.)">
+                        </div>
+                        <div class="mb-2">
+                            <input type="url" name="external_url" class="form-control" placeholder="Lien externe (cours, article...)">
+                        </div>
+                        <div class="mb-2">
+                            <input type="file" name="file" class="form-control">
+                        </div>
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-sm btn-outline-light rounded-pill">
+                                <i class="bi bi-plus-lg me-1"></i>Ajouter un tutoriel
+                            </button>
+                        </div>
+                    </form>
+                    <hr>
+                    {% endif %}
+                    {% if tutorials %}
+                        {% for tutorial in tutorials %}
+                        <div class="tutorial-item p-3 mb-3 rounded-4" style="background: #f8f9fa;">
+                            <h6 class="fw-bold mb-1">{{ tutorial.title }}</h6>
+                            <p class="small text-muted mb-2">{{ tutorial.description|truncatewords:20 }}</p>
+                            <div class="d-flex gap-2">
+                                {% if tutorial.video_url %}
+                                <a href="{{ tutorial.video_url }}" target="_blank" class="btn btn-sm btn-danger rounded-pill">
+                                    <i class="bi bi-play-fill me-1"></i>Vidéo
+                                </a>
+                                {% endif %}
+                                {% if tutorial.external_url %}
+                                <a href="{{ tutorial.external_url }}" target="_blank" class="btn btn-sm btn-primary rounded-pill">
+                                    <i class="bi bi-link-45deg me-1"></i>Lien
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center mb-0">Aucun tutoriel pour le moment</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-lg" style="border-radius: 20px;">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3">Statistiques</h6>
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Membres</small>
+                        <strong>{{ classroom.members_count }}</strong>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Posts</small>
+                        <strong>{{ classroom.posts_count }}</strong>
+                    </div>
+                    {% if classroom.invite_code %}
+                    <div class="mt-4 p-3 rounded-4" style="background: #f8f9fa;">
+                        <small class="text-muted d-block mb-2">Code d'invitation</small>
+                        <strong class="d-block text-center" style="font-size: 1.5rem; letter-spacing: 2px;">{{ classroom.invite_code }}</strong>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Gestion des likes
+function toggleLike(postId, button) {
+    fetch(`/classrooms/posts/${postId}/like/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFTOKEN': '{{ csrf_token }}',
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const icon = button.querySelector('i');
+            const countSpan = button.querySelector('.like-count');
+            
+            if (data.liked) {
+                icon.classList.remove('bi-heart');
+                icon.classList.add('bi-heart-fill', 'text-danger');
+            } else {
+                icon.classList.remove('bi-heart-fill', 'text-danger');
+                icon.classList.add('bi-heart');
+            }
+            
+            countSpan.textContent = data.likes_count;
+            button.setAttribute('data-liked', data.liked.toString());
+        }
+    });
+}
+
+// Gestion de la soumission du formulaire
+function handlePostFormSubmit(e) {
+    e.preventDefault();
+    
+    const form = e.target;
+    const formData = new FormData(form);
+    
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            form.reset();
+            // La réponse AJAX contient le HTML du nouveau post
+            const postsContainer = document.querySelector('.card-body.p-4');
+            const firstPost = postsContainer.querySelector('.post-item');
+            
+            if (firstPost) {
+                firstPost.insertAdjacentHTML('beforebegin', data.html);
+            } else {
+                // Si c'est le premier post
+                const postList = postsContainer.querySelector('hr');
+                if (postList) {
+                    postList.insertAdjacentHTML('afterend', data.html);
+                } else {
+                    postsContainer.insertAdjacentHTML('beforeend', data.html);
+                }
+            }
+        } else {
+            alert(data.error || 'Erreur lors de la publication');
+        }
+    });
+}
+
+// Gestion du clic sur le bouton de like
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.like-btn')) {
+        const button = e.target.closest('.like-btn');
+        const postId = button.getAttribute('data-post-id');
+        toggleLike(postId, button);
+    }
+});
+
+// Gestion de la soumission du formulaire de post
+const postForm = document.getElementById('class-post-form');
+if (postForm) {
+    postForm.addEventListener('submit', handlePostFormSubmit);
+}
+
+function joinClassroom() {
+    const inviteCode = prompt('Entrez le code d\'invitation :');
+    if (inviteCode === null) return;
+    
+    fetch(`/classrooms/{{ classroom.id }}/join/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFTOKEN': '{{ csrf_token }}',
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `invite_code=${encodeURIComponent(inviteCode)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error || 'Erreur lors de l\'ajout à la classe');
+        }
+    });
+}
+    const postForm = document.getElementById('class-post-form');
+    const postsContainer = document.querySelector('.card-body.p-4');
+
+    if (postForm && postsContainer) {
+        postForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const submitBtn = postForm.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerText = 'Envoi...';
+            }
+
+            const formData = new FormData(postForm);
+
+            fetch(postForm.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Créer un nouveau bloc post visuel (simple)
+                    const content = formData.get('content') || '';
+                    const title = formData.get('title') || '';
+
+                    const newPost = document.createElement('div');
+                    newPost.className = 'post-item p-3 mb-3 rounded-4';
+                    newPost.style.background = '#f8f9fa';
+                    newPost.style.borderLeft = '4px solid #00C896';
+                    newPost.style.opacity = '0';
+                    newPost.style.transform = 'translateY(10px)';
+                    newPost.innerHTML = `
+                        <div class="d-flex align-items-start mb-2">
+                            <div class="avatar-circle me-3" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                                {{ request.user.username|first|upper }}
+                            </div>
+                            <div class="flex-grow-1">
+                                <strong>{{ request.user.username }}</strong>
+                                <span class="badge bg-secondary ms-2">discussion</span>
+                                <small class="text-muted d-block">à l'instant</small>
+                            </div>
+                        </div>
+                        ${title ? `<h6 class="fw-bold mb-2"></h6>` : ''}
+                        <p class="mb-2"></p>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-primary rounded-pill">
+                                <i class="bi bi-heart me-1"></i>0
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill">
+                                <i class="bi bi-chat me-1"></i>0
+                            </button>
+                        </div>
+                    `;
+
+                    const titleEl = newPost.querySelector('h6');
+                    const contentEl = newPost.querySelector('p');
+                    if (titleEl) titleEl.textContent = title;
+                    if (contentEl) contentEl.textContent = content;
+
+                    // Insérer le nouveau post juste après le formulaire
+                    const hr = postForm.nextElementSibling; // le <hr>
+                    postsContainer.insertBefore(newPost, hr.nextSibling);
+
+                    // Animation d'apparition
+                    requestAnimationFrame(() => {
+                        newPost.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+                        newPost.style.opacity = '1';
+                        newPost.style.transform = 'translateY(0)';
+                    });
+
+                    // Réinitialiser le formulaire
+                    postForm.reset();
+                } else {
+                    alert(data.error || 'Erreur lors de la publication');
+                }
+            })
+            .catch(() => {
+                alert('Erreur réseau lors de la publication');
+            })
+            .finally(() => {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="bi bi-send me-1"></i>Publier';
+                }
+            });
+        });
+    }
+});
+</script>
+{% endblock %}
+

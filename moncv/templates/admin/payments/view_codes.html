@@ -1,0 +1,177 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .code-list {
+        font-family: 'Courier New', monospace;
+        font-size: 1.1em;
+        line-height: 2.5;
+        column-count: 2;
+        column-gap: 2rem;
+    }
+    .code-item {
+        break-inside: avoid;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #eee;
+    }
+    .code-text {
+        font-weight: bold;
+        letter-spacing: 1px;
+        color: #0d6efd;
+    }
+    .code-status {
+        font-size: 0.8em;
+        padding: 0.2rem 0.5rem;
+        border-radius: 10px;
+        margin-left: 1rem;
+    }
+    .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    .status-used {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    .status-expired {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+        body {
+            padding: 20px;
+        }
+        .code-list {
+            column-count: 3;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content_title %}
+<h1>{% trans 'Codes de vérification générés' %}</h1>
+{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            {% if store %}
+                {% blocktrans with store_name=store.name count count=codes|length %}
+                    {{ count }} code généré pour {{ store_name }}
+                {% plural %}
+                    {{ count }} codes générés pour {{ store_name }}
+                {% endblocktrans %}
+            {% else %}
+                {% blocktrans count count=codes|length %}
+                    {{ count }} code généré
+                {% plural %}
+                    {{ count }} codes générés
+                {% endblocktrans %}
+            {% endif %}
+        </h5>
+        <div class="no-print">
+            <button onclick="window.print()" class="btn btn-outline-secondary btn-sm me-2">
+                <i class="bi bi-printer me-1"></i> {% trans 'Imprimer' %}
+            </button>
+            <button id="copy-codes-btn" class="btn btn-outline-success btn-sm me-2">
+                <i class="bi bi-clipboard me-1"></i> {% trans 'Copier les codes' %}
+            </button>
+            <button id="download-csv-btn" class="btn btn-outline-secondary btn-sm me-2">
+                <i class="bi bi-download me-1"></i> {% trans 'Télécharger CSV' %}
+            </button>
+            <a href="{% url 'payments:code_dashboard' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> {% trans 'Retour au tableau de bord' %}
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info no-print">
+            <i class="bi bi-info-circle me-2"></i>
+            {% trans 'Ces codes sont valables jusqu\'au' %} <strong>{{ expires_at|date:"d/m/Y H:i" }}</strong>.
+            {% trans 'Ils ne seront plus affichés après utilisation ou expiration.' %}
+        </div>
+
+        <div class="code-list">
+            {% for code in codes %}
+                <div class="code-item">
+                    <span class="code-text">{{ code.code }}</span>
+                    <span class="code-status status-{{ code.status }}">
+                        {{ code.get_status_display }}
+                    </span>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-4 no-print">
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                {% blocktrans %}
+                <strong>Important :</strong> Ces codes sont confidentiels et ne doivent être partagés qu'avec les clients concernés.
+                Chaque code ne peut être utilisé qu'une seule fois et expire automatiquement à la date indiquée ci-dessus.
+                {% endblocktrans %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    function getCodesText() {
+        return Array.from(document.querySelectorAll('.code-text')).map(function(el){ return el.textContent.trim(); }).join('\n');
+    }
+
+    function downloadCSV(filename) {
+        var codes = Array.from(document.querySelectorAll('.code-text')).map(function(el){ return el.textContent.trim(); });
+        var rows = [['Code']].concat(codes.map(function(c){ return [c]; }));
+        var csv = rows.map(function(r){ return r.map(function(cell){ return '"' + (cell||'') + '"'; }).join(';'); }).join('\n');
+        var blob = new Blob([String.fromCharCode(0xFEFF) + csv], {type: 'text/csv;charset=utf-8;'});
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename || 'codes.csv';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+    }
+
+    // Désactiver le clic droit pour empêcher le menu contextuel
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+    });
+    
+    // Désactiver la touche Impr. écran
+    document.addEventListener('keydown', function(e) {
+        // Bloquer Imp. écran, Ctrl+P, Cmd+P, Ctrl+S, Cmd+S
+        if ((e.key === 'PrintScreen') || 
+            (e.ctrlKey && e.key === 'p') || 
+            (e.metaKey && e.key === 'p') ||
+            (e.ctrlKey && e.key === 's') ||
+            (e.metaKey && e.key === 's')) {
+            e.preventDefault();
+            return false;
+        }
+    });
+    // Copy button
+    document.getElementById('copy-codes-btn').addEventListener('click', function(){
+        var text = getCodesText();
+        if (!text) return;
+        navigator.clipboard.writeText(text).then(function(){
+            alert('Codes copiés dans le presse-papiers');
+        }, function(){
+            alert('Impossible de copier les codes');
+        });
+    });
+
+    document.getElementById('download-csv-btn').addEventListener('click', function(){
+        var ts = new Date().toISOString().replace(/[:\.]/g,'').slice(0,15);
+        downloadCSV('verification_codes_' + ts + '.csv');
+    });
+</script>
+{% endblock %}

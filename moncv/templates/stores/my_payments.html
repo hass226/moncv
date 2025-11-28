@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load currency_tags %}
+
+{% block title %}Mes Paiements - MYMEDAGA{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 50px;">
+    <h1 class="display-5 mb-4">
+        <i class="bi bi-wallet2"></i> Mes Paiements
+    </h1>
+
+    <div class="table-responsive">
+        <table class="table table-hover" style="background: white; border-radius: 15px; overflow: hidden;">
+            <thead style="background: linear-gradient(135deg, var(--primary-orange), var(--primary-red)); color: white;">
+                <tr>
+                    <th>ID</th>
+                    <th>Transaction</th>
+                    <th>Montant</th>
+                    <th>Méthode</th>
+                    <th>Statut</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for payment in payments %}
+                <tr>
+                    <td>#{{ payment.id }}</td>
+                    <td>
+                        <code>{{ payment.transaction_id|truncatechars:20 }}</code>
+                    </td>
+                    <td><strong>{% price_in_currency payment.amount 'EUR' %}</strong></td>
+                    <td>{{ payment.get_payment_method_display }}</td>
+                    <td>
+                        <span class="badge bg-{% if payment.status == 'completed' %}success{% elif payment.status == 'failed' %}danger{% elif payment.status == 'processing' %}warning{% else %}secondary{% endif %}">
+                            {{ payment.get_status_display }}
+                        </span>
+                    </td>
+                    <td>{{ payment.created_at|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        <a href="{% url 'payment_status' payment.id %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i> Détails
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-5">
+                        <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+                        <p class="mt-3 text-muted">Aucun paiement pour le moment</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+

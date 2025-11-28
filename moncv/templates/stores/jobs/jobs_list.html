@@ -1,0 +1,347 @@
+{% extends 'base.html' %}
+{% load static i18n %}
+
+{% block title %}Campus Jobs - MYMEDAGA{% endblock %}
+
+{% block meta_title %}Jobs étudiants & missions freelance - MYMEDAGA Campus Jobs{% endblock %}
+{% block meta_description %}Trouvez ou publiez des jobs étudiants, missions freelance et petits boulots entre étudiants sur MYMEDAGA Campus Jobs.{% endblock %}
+{% block meta_keywords %}jobs étudiants, missions freelance, campus jobs, travail étudiant, petits boulots, Afrique, MYMEDAGA{% endblock %}
+
+{% block og_title %}Campus Jobs - Jobs étudiants sur MYMEDAGA{% endblock %}
+{% block og_description %}Un espace dédié aux jobs étudiants et missions freelance pour la communauté MYMEDAGA.{% endblock %}
+
+{% block twitter_title %}Campus Jobs - Jobs étudiants & freelance{% endblock %}
+{% block twitter_description %}Publie ou trouve ton prochain job étudiant ou mission freelance sur MYMEDAGA Campus Jobs.{% endblock %}
+
+{% block extra_css %}
+<style>
+    .jobs-hero-title {
+        background: linear-gradient(135deg, #22c55e, #4facfe);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .job-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        transform: translateY(12px);
+        opacity: 0;
+        transition: transform 0.4s ease, box-shadow 0.35s ease, opacity 0.4s ease;
+    }
+
+    .job-card.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .job-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3) !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="container">
+        <!-- Header -->
+        <div class="text-center mb-5">
+            {% if my_jobs_view %}
+                <h1 class="display-3 fw-bold mb-3 jobs-hero-title">
+                    💼 {% trans "MES JOBS" %}
+                </h1>
+                <p class="lead text-white">{% trans "Tous les jobs que tu as publiés." %}</p>
+            {% else %}
+                <h1 class="display-3 fw-bold mb-3 jobs-hero-title">
+                    💼 {% trans "CAMPUS JOBS" %}
+                </h1>
+                <p class="lead text-white">{% blocktrans %}Trouvez des jobs entre étudiants, payés en {{ current_currency }} !{% endblocktrans %}</p>
+            {% endif %}
+            {% if user.is_authenticated %}
+            <a href="{% url 'create_job' %}" class="btn btn-lg btn-success rounded-pill px-5 mt-3 shadow-lg">
+                <i class="bi bi-plus-circle me-2"></i>{% trans "POSTER UN JOB" %}
+            </a>
+            {% endif %}
+        </div>
+
+        {% if my_jobs_view and job_stats %}
+        <!-- Stats Mes jobs -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-lg job-card" style="border-radius: 20px;">
+                    <div class="card-body text-center">
+                        <small class="text-muted d-block">Total</small>
+                        <strong>{{ job_stats.total }}</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-lg job-card" style="border-radius: 20px;">
+                    <div class="card-body text-center">
+                        <small class="text-muted d-block">Ouverts</small>
+                        <strong>{{ job_stats.open }}</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-lg job-card" style="border-radius: 20px;">
+                    <div class="card-body text-center">
+                        <small class="text-muted d-block">En cours</small>
+                        <strong>{{ job_stats.in_progress }}</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-lg job-card" style="border-radius: 20px;">
+                    <div class="card-body text-center">
+                        <small class="text-muted d-block">Terminés</small>
+                        <strong>{{ job_stats.completed }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Filters -->
+        <div class="card border-0 shadow-lg mb-4 job-card" style="border-radius: 20px;">
+            <div class="card-body p-4">
+                <form method="GET" class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <input type="text" name="search" class="form-control rounded-pill" placeholder="Rechercher..." value="{{ request.GET.search }}">
+                    </div>
+                    <div class="col-md-3">
+                        <select name="category" class="form-select rounded-pill">
+                            <option value="">Toutes les catégories</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if request.GET.category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% if my_jobs_view %}
+                    <div class="col-md-3">
+                        <select name="status" class="form-select rounded-pill">
+                            <option value="">Tous les statuts</option>
+                            {% for value, label in job_status_choices %}
+                            <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill">
+                            <i class="bi bi-search me-2"></i>Rechercher
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Recommended Jobs -->
+        {% if recommended_jobs %}
+        <div class="mb-4">
+            <h4 class="text-white mb-3"><i class="bi bi-star-fill text-warning me-2"></i>Recommandés pour vous</h4>
+            <div class="row g-3">
+                {% for job in recommended_jobs %}
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-lg job-card" style="border-radius: 20px; border-left: 4px solid #00C896;">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="fw-bold mb-0">{{ job.title }}</h5>
+                                <span class="badge bg-success">Recommandé</span>
+                            </div>
+                            <p class="text-muted small mb-2">{{ job.posted_by.username }}</p>
+                            <p class="mb-3">{{ job.description|truncatewords:20 }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    {% if job.amount %}
+    <strong class="text-success product-price"
+            data-amount="{{ job.amount }}"
+            data-currency="{{ job.currency }}">
+        {{ job.amount }} {{ job.currency }}
+    </strong>
+{% else %}
+    <span class="text-muted negotiable-text" data-key="negotiable">
+        Prix négociable
+    </span>
+{% endif %}
+                                </div>
+                                <a href="{% url 'job_detail' job.id %}" class="btn btn-sm btn-primary rounded-pill">Voir</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- All Jobs -->
+        <h4 class="text-white mb-3">Tous les jobs</h4>
+        <div class="row g-4">
+            {% for job in jobs %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 shadow-lg h-100 job-card" style="border-radius: 20px;">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="fw-bold mb-1">{{ job.title }}</h5>
+                                <p class="text-muted small mb-0">
+                                    <i class="bi bi-person me-1"></i>{{ job.posted_by.username }}
+                                </p>
+                            </div>
+                            {% if job.category %}
+                            <span class="badge bg-primary rounded-pill">{{ job.category.name }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <p class="text-muted mb-3 small">{{ job.description|truncatewords:15 }}</p>
+                        
+                        <div class="mb-3">
+                            {% if job.is_remote %}
+                            <span class="badge bg-info me-1"><i class="bi bi-laptop me-1"></i>Remote</span>
+                            {% endif %}
+                            {% if job.location %}
+                            <span class="badge bg-secondary"><i class="bi bi-geo-alt me-1"></i>{{ job.location }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                {% if job.amount %}
+                                <strong class="text-success product-price"
+                                        data-amount="{{ job.amount }}"
+                                        data-currency="{{ job.currency }}">
+                                    {{ job.amount }} {{ job.currency }}
+                                </strong>
+                                <small class="text-muted d-block">{{ job.get_payment_type_display }}</small>
+                                {% else %}
+                                <span class="text-muted negotiable-text" data-key="negotiable">
+                                    Prix négociable
+                                </span>
+                                {% endif %}
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted d-block">{{ job.applications_count }} candidature(s)</small>
+                                <small class="text-muted">{{ job.created_at|timesince }} ago</small>
+                            </div>
+                        </div>
+                        
+                        {% if my_jobs_view %}
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <form method="POST" action="/jobs/{{ job.id }}/status/">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="open">
+                                    <button type="submit" class="btn btn-sm btn-success rounded-pill">
+                                        <i class="bi bi-check me-2"></i>Ouvrir
+                                    </button>
+                                </form>
+                                <form method="POST" action="/jobs/{{ job.id }}/status/">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="in_progress">
+                                    <button type="submit" class="btn btn-sm btn-primary rounded-pill">
+                                        <i class="bi bi-play me-2"></i>En cours
+                                    </button>
+                                </form>
+                                <form method="POST" action="/jobs/{{ job.id }}/status/">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="completed">
+                                    <button type="submit" class="btn btn-sm btn-secondary rounded-pill">
+                                        <i class="bi bi-check me-2"></i>Terminer
+                                    </button>
+                                </form>
+                            </div>
+                            <a href="{% url 'job_detail' job.id %}" class="btn btn-sm btn-primary rounded-pill">
+                                <i class="bi bi-eye me-2"></i>Voir les détails
+                            </a>
+                        </div>
+                        {% else %}
+                        <a href="{% url 'job_detail' job.id %}" class="btn btn-primary w-100 rounded-pill">
+                            <i class="bi bi-eye me-2"></i>Voir les détails
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-briefcase text-white" style="font-size: 5rem; opacity: 0.5;"></i>
+                <h3 class="text-white mt-3">Aucun job disponible</h3>
+                <p class="text-white-50">Soyez le premier à poster un job !</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if jobs.has_other_pages %}
+        <nav class="mt-5">
+            <ul class="pagination justify-content-center">
+                {% if jobs.has_previous %}
+                <li class="page-item">
+                    <a class="page-link rounded-pill me-2" href="?page={{ jobs.previous_page_number }}">Précédent</a>
+                </li>
+                {% endif %}
+                <li class="page-item active">
+                    <span class="page-link rounded-pill">{{ jobs.number }} / {{ jobs.paginator.num_pages }}</span>
+                </li>
+                {% if jobs.has_next %}
+                <li class="page-item">
+                    <a class="page-link rounded-pill ms-2" href="?page={{ jobs.next_page_number }}">Suivant</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const cards = document.querySelectorAll('.job-card');
+
+        if ('IntersectionObserver' in window) {
+            const observer = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        obs.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.18 });
+
+            cards.forEach(card => observer.observe(card));
+        } else {
+            cards.forEach(card => card.classList.add('visible'));
+        }
+
+        const filterForm = document.querySelector('.card .card-body form');
+        const searchInput = filterForm ? filterForm.querySelector('input[name="search"]') : null;
+        const categorySelect = filterForm ? filterForm.querySelector('select[name="category"]') : null;
+
+        const delay = 500;
+
+        if (filterForm && searchInput) {
+            let timer = null;
+            searchInput.addEventListener('input', function () {
+                if (timer) clearTimeout(timer);
+                timer = setTimeout(function () {
+                    filterForm.submit();
+                }, delay);
+            });
+        }
+
+        if (filterForm && categorySelect) {
+            categorySelect.addEventListener('change', function () {
+                filterForm.submit();
+            });
+        }
+    });
+</script>
+
+{% endblock %}
+{% endblock %}
+

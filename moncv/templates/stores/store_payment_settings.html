@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Paramètres de paiement - {{ store.name }} - MYMEDAGA{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm" style="border-radius: 20px;">
+                <div class="card-body p-4">
+                    <h1 class="h4 mb-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-gear"></i>
+                        Paramètres de paiement de la boutique
+                    </h1>
+                    <p class="text-muted mb-4">
+                        Configurez ici vos identifiants FedaPay et Paystack pour activer ces méthodes de paiement
+                        sur vos pages de commande, d'abonnement et de promotion.
+                    </p>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label" for="id_fedapay_merchant_id">
+                                <i class="bi bi-credit-card"></i> ID marchand FedaPay
+                            </label>
+                            {{ form.fedapay_merchant_id }}
+                            <small class="form-text text-muted">
+                                Renseignez l'identifiant marchand fourni par FedaPay. Laissez vide si vous n'utilisez pas FedaPay.
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="id_paystack_subaccount">
+                                <i class="bi bi-diagram-3"></i> Subaccount Paystack
+                            </label>
+                            {{ form.paystack_subaccount }}
+                            <small class="form-text text-muted">
+                                Renseignez le subaccount Paystack utilisé pour les versements vers votre compte.
+                                Laissez vide si vous n'utilisez pas Paystack.
+                            </small>
+                        </div>
+
+                        <div class="alert alert-info small">
+                            <strong>Rappel :</strong><br>
+                            • Les clés API globales (plateforme) doivent être configurées par l'administrateur dans le serveur.<br>
+                            • Ces champs permettent d'activer FedaPay / Paystack spécifiquement pour votre boutique.<br>
+                            • Si un champ est vide, la méthode correspondante sera cachée dans les formulaires de paiement.
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Retour au dashboard
+                            </a>
+                            <button type="submit" class="btn btn-gradient-primary">
+                                <i class="bi bi-save"></i> Enregistrer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

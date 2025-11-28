@@ -1,0 +1,381 @@
+{% extends 'base.html' %}
+{% load static i18n %}
+{% load currency_tags %}
+
+{% block title %}Commande - {{ product.name }} - MYMEDAGA{% endblock %}
+
+{% block extra_css %}
+<style>
+    .checkout-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 30px 20px;
+    }
+
+    .checkout-card {
+        background: rgba(255, 255, 255, 0.98);
+        border-radius: 25px;
+        padding: 40px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        margin-bottom: 30px;
+    }
+
+    .product-summary {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 20px;
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 15px;
+        margin-bottom: 30px;
+    }
+
+    .product-summary img {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .form-group {
+        margin-bottom: 25px;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-control {
+        border-radius: 12px;
+        border: 2px solid #e0e0e0;
+        padding: 12px 18px;
+        transition: all 0.3s;
+        font-size: 1rem;
+    }
+
+    .form-control:focus {
+        border-color: var(--primary-orange);
+        box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.15);
+        outline: none;
+    }
+
+    .payment-methods {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+
+    .payment-method-card {
+        border: 2px solid #e0e0e0;
+        border-radius: 15px;
+        padding: 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: white;
+    }
+
+    .payment-method-card:hover {
+        border-color: var(--primary-orange);
+        transform: translateY(-3px);
+        box-shadow: 0 5px 20px rgba(255, 107, 53, 0.2);
+    }
+
+    .payment-method-card.selected {
+        border-color: var(--primary-orange);
+        background: linear-gradient(135deg, rgba(255, 107, 53, 0.1), rgba(247, 184, 1, 0.1));
+        box-shadow: 0 5px 20px rgba(255, 107, 53, 0.3);
+    }
+
+    .payment-method-card i {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        color: var(--primary-orange);
+    }
+
+    .order-summary {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 15px;
+        padding: 25px;
+        margin-top: 30px;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .summary-row:last-child {
+        border-bottom: none;
+        font-weight: 700;
+        font-size: 1.2rem;
+        color: var(--primary-orange);
+        margin-top: 10px;
+        padding-top: 20px;
+    }
+
+    .btn-checkout {
+        width: 100%;
+        padding: 18px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border-radius: 15px;
+        background: linear-gradient(135deg, var(--primary-green), #00A878);
+        border: none;
+        color: white;
+        margin-top: 25px;
+        transition: all 0.3s;
+        box-shadow: 0 8px 25px rgba(0, 200, 150, 0.4);
+    }
+
+    .btn-checkout:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 35px rgba(0, 200, 150, 0.6);
+    }
+
+    .location-status {
+        padding: 15px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .location-status.success {
+        background: rgba(0, 200, 150, 0.1);
+        border: 2px solid var(--primary-green);
+        color: #00A878;
+    }
+
+    .location-status.warning {
+        background: rgba(255, 184, 1, 0.1);
+        border: 2px solid var(--primary-yellow);
+        color: #F7B801;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="checkout-container">
+    <div class="checkout-card">
+        <h1 class="display-5 mb-4" style="text-align: center;">
+            <i class="bi bi-cart-check"></i> {% trans "Finaliser votre commande" %}
+        </h1>
+        <p class="text-center text-muted mb-4">
+            {% blocktrans %}Les montants sont affichés dans votre devise actuelle : <strong>{{ current_currency }}</strong>.{% endblocktrans %}
+        </p>
+
+        <!-- Résumé du produit -->
+        <div class="product-summary">
+            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+            <div style="flex: 1;">
+                <h3>{{ product.name }}</h3>
+                <p class="text-muted mb-2">{{ product.description|truncatewords:20 }}</p>
+                <p class="product-price" style="font-size: 1.5rem; margin: 0;" data-unit-price="{{ product.price }}" data-currency="{{ product.currency }}">
+                    {{ product.price }} {{ product.currency }}
+                </p>
+            </div>
+        </div>
+
+        <form id="checkout-form" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="product_id" value="{{ product.id }}">
+            <input type="hidden" id="latitude" name="latitude">
+            <input type="hidden" id="longitude" name="longitude">
+            <input type="hidden" id="address" name="address">
+
+            <!-- Statut de la localisation -->
+            <div id="location-status" class="location-status warning">
+                <i class="bi bi-geo-alt"></i>
+                <span>{% trans "Récupération de votre localisation..." %}</span>
+            </div>
+
+            <!-- Informations de livraison -->
+            <h3 class="mb-3"><i class="bi bi-truck"></i> Informations de livraison</h3>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Nom complet *</label>
+                        <input type="text" name="customer_name" class="form-control" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Téléphone *</label>
+                        <input type="tel" name="customer_phone" class="form-control" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" name="customer_email" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Adresse de livraison *</label>
+                <textarea name="delivery_address" id="delivery-address" class="form-control" rows="3" required></textarea>
+                <small class="text-muted">Votre adresse sera automatiquement remplie depuis votre localisation</small>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Ville</label>
+                        <input type="text" name="city" id="city" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Code postal</label>
+                        <input type="text" name="postal_code" id="postal_code" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Méthode de livraison -->
+            <h3 class="mb-3 mt-4"><i class="bi bi-box-seam"></i> Méthode de livraison</h3>
+            <div class="form-group">
+                <select name="delivery_method" class="form-control" id="delivery-method">
+                    <option value="delivery">Livraison à domicile</option>
+                    <option value="express">Livraison express</option>
+                    <option value="pickup">Retrait en magasin</option>
+                </select>
+            </div>
+
+            <!-- Quantité -->
+            <div class="form-group mt-4">
+                <label class="form-label">Quantité</label>
+                <input type="number" name="quantity" class="form-control" value="1" min="1" id="quantity" style="max-width: 150px;">
+            </div>
+
+            <!-- Notes -->
+            <div class="form-group">
+                <label class="form-label">Notes (optionnel)</label>
+                <textarea name="notes" class="form-control" rows="3" placeholder="Instructions spéciales pour la livraison..."></textarea>
+            </div>
+
+            <!-- Résumé de la commande -->
+            <div class="order-summary">
+                <h4 class="mb-3">Résumé de la commande</h4>
+                <div class="summary-row">
+                    <span>Sous-total:</span>
+                    <span id="subtotal">{{ product.price }} {{ product.currency }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Frais de livraison:</span>
+                    <span id="delivery-fee">0 {{ product.currency }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Total:</span>
+                    <span id="total">{{ product.price }} {{ product.currency }}</span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-checkout">
+                <i class="bi bi-check-circle"></i> Confirmer la commande
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+// Récupérer la localisation
+async function getLocation() {
+    const statusDiv = document.getElementById('location-status');
+    const latInput = document.getElementById('latitude');
+    const lngInput = document.getElementById('longitude');
+    const addressInput = document.getElementById('address');
+    const deliveryAddress = document.getElementById('delivery-address');
+    const cityInput = document.getElementById('city');
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                
+                latInput.value = lat;
+                lngInput.value = lng;
+
+                // Récupérer l'adresse
+                try {
+                    const response = await fetch(
+                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+                        { headers: { 'User-Agent': 'MYMEDAGA-App' } }
+                    );
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.address) {
+                            const addressParts = [];
+                            if (data.address.road) addressParts.push(data.address.road);
+                            if (data.address.house_number) addressParts.push(data.address.house_number);
+                            const fullAddress = addressParts.join(' ') || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                            
+                            addressInput.value = fullAddress;
+                            deliveryAddress.value = fullAddress;
+                            
+                            if (data.address.city || data.address.town) {
+                                cityInput.value = data.address.city || data.address.town;
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Erreur récupération adresse:', error);
+                }
+
+                statusDiv.className = 'location-status success';
+                statusDiv.innerHTML = '<i class="bi bi-check-circle-fill"></i> <span>Localisation récupérée avec succès!</span>';
+            },
+            (error) => {
+                statusDiv.className = 'location-status warning';
+                statusDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> <span>Localisation non disponible. Veuillez saisir votre adresse manuellement.</span>';
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    } else {
+        statusDiv.className = 'location-status warning';
+        statusDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> <span>Géolocalisation non supportée. Veuillez saisir votre adresse manuellement.</span>';
+    }
+}
+
+// Calculer le total
+function calculateTotal() {
+    const quantity = parseInt(document.getElementById('quantity').value) || 1;
+    const unitPrice = parseFloat('{{ product.price }}');
+    const deliveryMethod = document.getElementById('delivery-method').value;
+    const currency = '{{ product.currency }}';
+    
+    const subtotal = unitPrice * quantity;
+    let deliveryFee = 0;
+    
+    if (deliveryMethod === 'express') {
+        deliveryFee = 5;
+    } else if (deliveryMethod === 'delivery') {
+        deliveryFee = 2;
+    }
+    
+    document.getElementById('subtotal').textContent = subtotal.toFixed(2) + ' ' + currency;
+    document.getElementById('delivery-fee').textContent = deliveryFee.toFixed(2) + ' ' + currency;
+    document.getElementById('total').textContent = (subtotal + deliveryFee).toFixed(2) + ' ' + currency;
+}
+
+document.getElementById('quantity').addEventListener('change', calculateTotal);
+document.getElementById('delivery-method').addEventListener('change', calculateTotal);
+
+// Initialiser
+getLocation();
+calculateTotal();
+</script>
+{% endblock %}
+

@@ -1,0 +1,639 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Éditer mon profil{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" rel="stylesheet">
+<style>
+    .profile-header {
+        position: relative;
+        margin-bottom: 2rem;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .cover-photo {
+        height: 200px;
+        background-color: #f0f2f5;
+        background-size: cover;
+        background-position: center;
+        position: relative;
+    }
+    .profile-picture {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        border: 4px solid white;
+        background-color: #f8f9fa;
+        position: absolute;
+        bottom: -75px;
+        left: 2rem;
+        overflow: hidden;
+        z-index: 10;
+    }
+    .profile-actions {
+        position: absolute;
+        bottom: 1rem;
+        right: 1rem;
+    }
+    .profile-content {
+        padding: 2rem;
+        padding-top: 5rem;
+        background-color: white;
+    }
+    .nav-tabs {
+        border-bottom: 2px solid #dee2e6;
+    }
+    .nav-tabs .nav-link {
+        border: none;
+        color: #6c757d;
+        font-weight: 500;
+        padding: 1rem 1.5rem;
+    }
+    .nav-tabs .nav-link.active {
+        color: #0d6efd;
+        background: none;
+        border: none;
+        border-bottom: 3px solid #0d6efd;
+        margin-bottom: -2px;
+    }
+    .form-label {
+        font-weight: 500;
+    }
+    .form-control, .form-select {
+        border-radius: 8px;
+        padding: 0.6rem 1rem;
+    }
+    .btn-primary {
+        border-radius: 8px;
+        padding: 0.6rem 2rem;
+        font-weight: 500;
+    }
+    .btn-outline-secondary {
+        border-radius: 8px;
+        padding: 0.6rem 2rem;
+    }
+    .character-counter {
+        font-size: 0.8rem;
+        color: #6c757d;
+        text-align: right;
+    }
+    .image-preview {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    .image-upload-btn {
+        cursor: pointer;
+    }
+    .social-links .input-group-text {
+        background-color: #f8f9fa;
+    }
+    .social-links .form-control {
+        border-left: none;
+    }
+    .social-links .input-group-text i {
+        width: 20px;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Messages de feedback -->
+<div class="container mt-3">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert {{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h4 class="mb-0">Modifier mon profil</h4>
+                </div>
+                <div class="card-body p-0">
+                    <!-- En-tête du profil avec photo de couverture et photo de profil -->
+                    <div class="profile-header">
+                        <div class="cover-photo" id="cover-photo-preview"
+                             style="background-image: url(&quot;{% if profile.cover_photo %}{{ profile.cover_photo.url }}{% else %}{% static 'img/default-cover.jpg' %}{% endif %}&quot;);">
+                            <div class="profile-actions">
+                                <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#coverPhotoModal">
+                                    <i class="fas fa-camera me-1"></i> Changer la photo de couverture
+                                </button>
+                            </div>
+                        </div>
+                        <div class="profile-picture" id="profile-picture-preview"
+                             style="background-image: url(&quot;{% if profile.profile_picture %}{{ profile.profile_picture.url }}{% else %}{% static 'img/default-avatar.png' %}{% endif %}&quot;); background-size: cover; background-position: center;">
+                            <div class="position-absolute bottom-0 end-0 mb-2 me-2">
+                                    <label for="id_profile_picture" class="btn btn-primary btn-sm rounded-circle p-2" title="Changer la photo de profil">
+                                        <i class="fas fa-camera"></i>
+                                    </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Contenu du formulaire -->
+                    <div class="profile-content">
+                        <ul class="nav nav-tabs mb-4" id="profileTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link {% if active_tab == 'general_profile' %}active{% endif %}" 
+                                        id="general-tab" data-bs-toggle="tab" data-bs-target="#general" 
+                                        type="button" role="tab" aria-controls="general" aria-selected="true">
+                                    <i class="fas fa-user-circle me-2"></i>Informations générales
+                                </button>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content" id="profileTabsContent">
+                            <!-- Onglet Informations générales -->
+                            <div class="tab-pane fade {% if active_tab == 'general_profile' %}show active{% endif %}" 
+                                 id="general" role="tabpanel" aria-labelledby="general-tab">
+                                <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate id="profileForm" onsubmit="return validateForm()">
+                                    {% csrf_token %}
+                                    <!-- Champs de fichier pour les images -->
+                                    {{ form.new_profile_picture }}
+                                    {{ form.new_cover_photo }}
+                                    {{ form.profile_picture }}
+                                    {{ form.cover_photo }}
+                                    
+                                    <!-- Section À propos de moi -->
+                                    <div class="card mb-4">
+                                        <div class="card-header bg-light">
+                                            <h5 class="mb-0">À propos de moi</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="mb-3">
+                                                <label for="id_bio" class="form-label">Biographie <span class="text-danger">*</span></label>
+                                                {{ form.bio }}
+                                                <div class="invalid-feedback" id="bio-error">
+                                                    Veuillez fournir une biographie (max 500 caractères).
+                                                </div>
+                                                <div class="form-text">Décrivez-vous en quelques mots (500 caractères max).</div>
+                                                <div class="character-counter" id="bio-counter">0/500</div>
+                                            </div>
+                                            
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="id_phone" class="form-label">Téléphone</label>
+                                                        {{ form.phone }}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="id_email_public" class="form-label">Email public</label>
+                                                        {{ form.email_public }}
+                                                        <div class="form-text">Cet email sera visible sur votre profil public.</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="id_city" class="form-label">Ville</label>
+                                                        {{ form.city }}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="id_country" class="form-label">Pays</label>
+                                                        {{ form.country }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label for="id_website" class="form-label">Site web personnel</label>
+                                                {{ form.website }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Section Réseaux sociaux -->
+                                    <div class="card mb-4">
+                                        <div class="card-header bg-light">
+                                            <h5 class="mb-0">Réseaux sociaux</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="social-links">
+                                                <div class="mb-3">
+                                                    <label class="form-label">LinkedIn</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text"><i class="fab fa-linkedin"></i></span>
+                                                        {{ form.linkedin_url }}
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">GitHub</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text"><i class="fab fa-github"></i></span>
+                                                        {{ form.github_url }}
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">Portfolio</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text"><i class="fas fa-globe"></i></span>
+                                                        {{ form.portfolio_url }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Section Confidentialité -->
+                                    <div class="card mb-4">
+                                        <div class="card-header bg-light">
+                                            <h5 class="mb-0">Confidentialité</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="form-check form-switch mb-3">
+                                                {{ form.is_public }}
+                                                <label class="form-check-label" for="id_is_public">Rendre mon profil public</label>
+                                                <div class="form-text">Si désactivé, seules les personnes avec le lien pourront voir votre profil.</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between">
+                                        <a href="{% url 'user_profile' %}" class="btn btn-outline-secondary">
+                                            <i class="fas fa-arrow-left me-2"></i>Retour au profil
+                                        </a>
+                                        <button type="submit" class="btn btn-primary" id="submit-button">
+                                            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true" id="submit-spinner"></span>
+                                            <i class="fas fa-save me-2"></i><span id="submit-text">Enregistrer les modifications</span>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour la photo de couverture -->
+<div class="modal fade" id="coverPhotoModal" tabindex="-1" aria-labelledby="coverPhotoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="coverPhotoModalLabel">Changer la photo de couverture</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="id_new_cover_photo" class="form-label">Sélectionner une image</label>
+                    <input type="file" class="form-control" id="id_new_cover_photo" name="new_cover_photo" accept="image/*">
+                    <div class="form-text">Taille recommandée : 1500x500px. Formats supportés : JPG, PNG, WEBP</div>
+                </div>
+                <div class="text-center">
+                    <div id="cover-crop-preview" style="max-width: 100%; height: 150px; overflow: hidden; display: none;">
+                        <img id="cover-crop-image" src="#" alt="Aperçu" style="max-width: 100%;">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" id="save-cover-photo">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+        // Gestion du compteur de caractères pour la biographie
+    const bioField = document.getElementById('id_bio');
+    const bioCounter = document.getElementById('bio-counter');
+    const bioError = document.getElementById('bio-error');
+    
+    if (bioField && bioCounter) {
+        // Mettre à jour le compteur au chargement
+        updateCharacterCounter(bioField, bioCounter, 500);
+        
+        // Mettre à jour le compteur lors de la saisie
+        bioField.addEventListener('input', function() {
+            updateCharacterCounter(this, bioCounter, 500);
+            // Valider en temps réel
+            validateBio(this);
+        });
+        
+        // Valider au chargement de la page
+        validateBio(bioField);
+    }
+    
+    // Fonction de validation de la biographie
+    function validateBio(field) {
+        const isValid = field.value.length > 0 && field.value.length <= 500;
+        if (field.value.length > 500) {
+            field.classList.add('is-invalid');
+            bioError.textContent = 'La biographie ne doit pas dépasser 500 caractères.';
+        } else if (field.value.length === 0) {
+            field.classList.add('is-invalid');
+            bioError.textContent = 'La biographie est obligatoire.';
+        } else {
+            field.classList.remove('is-invalid');
+            field.classList.add('is-valid');
+        }
+        return isValid;
+    }
+    
+        // Fonction pour mettre à jour le compteur de caractères
+    function updateCharacterCounter(field, counterElement, maxLength) {
+        const currentLength = field.value.length;
+        counterElement.textContent = `${currentLength}/${maxLength}`;
+        
+        if (currentLength > maxLength) {
+            counterElement.style.color = '#dc3545';
+            counterElement.classList.add('text-danger');
+        } else if (currentLength > maxLength * 0.8) {
+            counterElement.style.color = '#fd7e14'; // Orange pour l'avertissement
+            counterElement.classList.add('text-warning');
+        } else {
+            counterElement.style.color = '#198754'; // Vert pour OK
+            counterElement.classList.remove('text-danger', 'text-warning');
+        }
+    }
+    
+    // Prévisualisation de l'image de profil
+    const profilePictureInput = document.getElementById('id_new_profile_picture');
+    const profilePicturePreview = document.getElementById('profile-picture-preview');
+    
+    if (profilePictureInput && profilePicturePreview) {
+        profilePictureInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Vérifier la taille du fichier (max 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    showToast('Erreur', 'La taille de l\'image ne doit pas dépasser 5MB', 'error');
+                    this.value = '';
+                    return;
+                }
+                
+                // Vérifier le type de fichier
+                const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+                if (!validTypes.includes(file.type)) {
+                    showToast('Erreur', 'Format de fichier non supporté. Utilisez JPG, PNG ou WEBP.', 'error');
+                    this.value = '';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Créer une image pour la prévisualisation
+                    const img = new Image();
+                    img.onload = function() {
+                        // Redimensionner l'image si elle est trop grande
+                        const maxSize = 800;
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        if (width > height && width > maxSize) {
+                            height *= maxSize / width;
+                            width = maxSize;
+                        } else if (height > maxSize) {
+                            width *= maxSize / height;
+                            height = maxSize;
+                        }
+                        
+                        // Créer un canvas pour redimensionner l'image
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Convertir en base64
+                        const resizedImage = canvas.toDataURL('image/jpeg', 0.8);
+                        
+                        // Mettre à jour l'aperçu
+                        profilePicturePreview.style.backgroundImage = `url('${resizedImage}')`;
+                        
+                        // Mettre à jour le champ caché avec les données de l'image redimensionnée
+                        const hiddenInput = document.querySelector('input[name="profile_picture"]');
+                        if (hiddenInput) {
+                            hiddenInput.value = resizedImage.split(',')[1];
+                        }
+                        
+                        showToast('Succès', 'Image de profil mise à jour avec succès', 'success');
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+    
+    // Gestion de la photo de couverture
+    const coverPhotoInput = document.getElementById('id_new_cover_photo');
+    const coverPhotoPreview = document.getElementById('cover-photo-preview');
+    const coverCropPreview = document.getElementById('cover-crop-preview');
+    const coverCropImage = document.getElementById('cover-crop-image');
+    const saveCoverPhotoBtn = document.getElementById('save-cover-photo');
+    
+    if (coverPhotoInput && coverPhotoPreview) {
+        coverPhotoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Vérifier la taille du fichier (max 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    showToast('Erreur', 'La taille de l\'image ne doit pas dépasser 5MB', 'error');
+                    this.value = '';
+                    return;
+                }
+                
+                // Vérifier le type de fichier
+                const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+                if (!validTypes.includes(file.type)) {
+                    showToast('Erreur', 'Format de fichier non supporté. Utilisez JPG, PNG ou WEBP.', 'error');
+                    this.value = '';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Afficher l'aperçu de recadrage
+                    coverCropImage.src = e.target.result;
+                    coverCropPreview.style.display = 'block';
+                    
+                    // Initialiser le recadrage si nécessaire
+                    if (window.Cropper) {
+                        initImageCropper(coverCropImage, {
+                            aspectRatio: 3 / 1, // Ratio 3:1 pour la photo de couverture
+                            viewMode: 1,
+                            autoCropArea: 0.8,
+                            responsive: true,
+                            guides: true
+                        });
+                    }
+                    
+                    // Afficher le modal
+                    const modal = new bootstrap.Modal(document.getElementById('coverPhotoModal'));
+                    modal.show();
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+    
+    // Initialiser le recadreur d'image si la bibliothèque est disponible
+    function initImageCropper(image, options) {
+        if (window.Cropper) {
+            // Détruire l'instance précédente si elle existe
+            if (image.cropper) {
+                image.cropper.destroy();
+            }
+            
+            // Créer une nouvelle instance de Cropper
+            image.cropper = new Cropper(image, options);
+        }
+    }
+    
+    // Fonction pour afficher des notifications toast
+    function showToast(title, message, type = 'success') {
+        const background = type === 'success' ? '#198754' : type === 'error' ? '#dc3545' : '#0d6efd';
+        
+        Toastify({
+            text: `<strong>${title}</strong><br>${message}`,
+            duration: 5000,
+            gravity: 'top',
+            position: 'right',
+            backgroundColor: background,
+            stopOnFocus: true,
+            escapeMarkup: false
+        }).showToast();
+    }
+    
+    // Validation du formulaire
+    function validateForm() {
+        let isValid = true;
+        
+        // Valider la biographie
+        if (bioField) {
+            isValid = validateBio(bioField) && isValid;
+        }
+        
+        // Valider les autres champs obligatoires si nécessaire
+        // Exemple pour un champ requis :
+        // const requiredField = document.getElementById('id_required_field');
+        // if (requiredField && !requiredField.value.trim()) {
+        //     requiredField.classList.add('is-invalid');
+        //     isValid = false;
+        // } else if (requiredField) {
+        //     requiredField.classList.remove('is-invalid');
+        //     requiredField.classList.add('is-valid');
+        // }
+        
+        if (!isValid) {
+            showToast('Erreur', 'Veuillez corriger les erreurs dans le formulaire.', 'error');
+            document.querySelector('.is-invalid').scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+        } else {
+            // Afficher l'indicateur de chargement
+            const submitButton = document.getElementById('submit-button');
+            const submitSpinner = document.getElementById('submit-spinner');
+            const submitText = document.getElementById('submit-text');
+            
+            if (submitButton && submitSpinner && submitText) {
+                submitButton.disabled = true;
+                submitSpinner.classList.remove('d-none');
+                submitText.textContent = 'Enregistrement en cours...';
+            }
+        }
+        
+        return isValid;
+    }
+    
+    // Ajouter la classe 'was-validated' au formulaire lors de la soumission
+    const form = document.getElementById('profileForm');
+    if (form) {
+        form.addEventListener('submit', function() {
+            this.classList.add('was-validated');
+        });
+    }
+    
+    // Gestion des champs obligatoires
+    document.querySelectorAll('[required]').forEach(function(field) {
+        field.addEventListener('input', function() {
+            if (this.value.trim() === '') {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+        
+        // Validation initiale
+        if (field.value.trim() === '') {
+            field.classList.add('is-invalid');
+        } else {
+            field.classList.add('is-valid');
+        }
+    });
+    
+    // Enregistrer la photo de couverture
+    if (saveCoverPhotoBtn && coverPhotoPreview && coverCropImage) {
+        saveCoverPhotoBtn.addEventListener('click', function() {
+            // Mettre à jour l'aperçu de la photo de couverture
+            const imageUrl = coverCropImage.src;
+            coverPhotoPreview.style.backgroundImage = `url('${imageUrl}')`;
+            
+            // Mettre à jour le champ caché avec les données de l'image
+            const hiddenInput = document.querySelector('input[name="cover_photo"]');
+            if (hiddenInput) {
+                hiddenInput.value = imageUrl.split(',')[1]; // Enregistrer uniquement les données base64
+            }
+            
+            // Mettre à jour le champ de fichier avec les données de l'image
+            fetch(imageUrl)
+                .then(res => res.blob())
+                .then(blob => {
+                    const file = new File([blob], 'cover_photo.jpg', { type: 'image/jpeg' });
+                    
+                    // Mettre à jour le champ de fichier avec le nouveau fichier
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    document.getElementById('id_new_cover_photo').files = dataTransfer.files;
+                });
+            
+            // Cacher le modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('coverPhotoModal'));
+            if (modal) {
+                modal.hide();
+            }
+        });
+    }
+    
+    // Initialiser les tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

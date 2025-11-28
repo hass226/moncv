@@ -1,0 +1,464 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load currency_tags %}
+
+{% block title %}{{ product.name }} - {{ product.store.name }} - MYMEDAGA{% endblock %}
+
+{% block meta_description %}{{ product.description|truncatewords:30 }} - Achetez {{ product.name }} sur MYMEDAGA{% endblock %}
+
+{% block meta_keywords %}{{ product.name }}, {{ product.category.name|default:"" }}, e-commerce, vente en ligne, {{ product.store.name }}{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "{{ product.name|escapejs }}",
+    "description": "{{ product.description|truncatewords:50|escapejs }}",
+    "image": "{{ request.scheme }}://{{ request.get_host }}{{ product.image.url }}",
+    "brand": {
+        "@type": "Brand",
+        "name": "{{ product.store.name|escapejs }}"
+    },
+    "offers": {
+        "@type": "Offer",
+        "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'product_detail' product.id %}",
+        "priceCurrency": "{{ product.currency }}",
+        "price": "{{ product.price }}",
+        "availability": "https://schema.org/InStock",
+        "seller": {
+            "@type": "Organization",
+            "name": "{{ product.store.name|escapejs }}"
+        }
+    }
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Image du produit -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-lg product-detail-main-card" style="border-radius: 20px; overflow: hidden;">
+                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-fluid w-100" style="max-height: 600px; object-fit: cover;">
+            </div>
+        </div>
+
+        <!-- Informations du produit -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-lg mb-4 product-detail-main-card" style="border-radius: 20px;">
+                <div class="card-body p-4">
+                    <h1 class="fw-bold mb-3 product-detail-hero-title">{{ product.name }}</h1>
+                    
+                    <!-- Boutique -->
+                    <div class="d-flex align-items-center mb-3">
+                        <a href="{% url 'store_detail' product.store.id %}" class="text-decoration-none">
+                            {% if product.store.logo %}
+                            <img src="{{ product.store.logo.url }}" alt="{{ product.store.name }}" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                            {% endif %}
+                            <strong class="text-primary">{{ product.store.name }}</strong>
+                        </a>
+                        {% if product.store.is_verified %}
+                        <span class="badge bg-success ms-2"><i class="bi bi-check-circle"></i> Vérifié</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Prix -->
+                    <h2 class="text-danger fw-bold mb-2 product-price"
+                        data-amount="{{ product.price }}"
+                        data-currency="{{ product.currency }}">
+                        {{ product.price }} {{ product.currency }}
+                    </h2>
+                    <p class="text-muted mb-4">
+                        Affiché dans votre devise actuelle : <strong>{{ current_currency }}</strong>.
+                    </p>
+
+                    <!-- Statistiques -->
+                    <div class="d-flex gap-4 mb-4 text-muted">
+                        <div>
+                            <i class="bi bi-eye me-1"></i>
+                            <span>{{ product.views_count }} vues</span>
+                        </div>
+                        <div>
+                            <i class="bi bi-heart me-1"></i>
+                            <span id="likes-count">{{ product.likes_count }} likes</span>
+                        </div>
+                        <div>
+                            <i class="bi bi-star me-1"></i>
+                            <span>{{ product.get_average_rating|default:"0" }}/5</span>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <h5 class="fw-bold mb-2">Description</h5>
+                        <p style="line-height: 1.8;">{{ product.description|linebreaks }}</p>
+                    </div>
+
+                    <!-- Catégorie et Tags -->
+                    {% if product.category %}
+                    <div class="mb-3">
+                        <span class="badge bg-primary me-2">{{ product.category.name }}</span>
+                    </div>
+                    {% endif %}
+                    {% if product.tags.all %}
+                    <div class="mb-4">
+                        {% for tag in product.tags.all %}
+                        <span class="badge bg-secondary me-1">#{{ tag.name }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Actions -->
+                    <div class="d-grid gap-2 mb-4">
+                        <a href="{% url 'checkout' product.id %}" class="btn btn-primary btn-lg rounded-pill">
+                            <i class="bi bi-cart-plus me-2"></i>Acheter maintenant
+                        </a>
+                        <button onclick="orderViaWhatsApp()" class="btn btn-success btn-lg rounded-pill whatsapp-btn">
+                            <i class="bi bi-whatsapp me-2"></i>Commander via WhatsApp
+                        </button>
+                    </div>
+
+                    <!-- Interactions sociales -->
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button onclick="toggleLike()" class="btn btn-outline-danger rounded-pill" id="like-btn">
+                            <i class="bi bi-heart{% if is_liked %}-fill{% endif %}" id="like-icon"></i>
+                            <span id="like-text">{% if is_liked %}Unlike{% else %}Like{% endif %}</span>
+                        </button>
+                        <button onclick="toggleFavorite()" class="btn btn-outline-warning rounded-pill" id="favorite-btn">
+                            <i class="bi bi-star{% if is_favorite %}-fill{% endif %}" id="favorite-icon"></i>
+                            <span>Favoris</span>
+                        </button>
+                        <button onclick="shareProduct()" class="btn btn-outline-info rounded-pill">
+                            <i class="bi bi-share me-1"></i>Partager
+                        </button>
+                        <a href="{% url 'store_detail' product.store.id %}" class="btn btn-outline-primary rounded-pill">
+                            <i class="bi bi-shop me-1"></i>Voir la boutique
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Commentaires -->
+    <div class="row mt-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-lg mb-4" style="border-radius: 20px;">
+                <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #00C896, #4facfe); border: none;">
+                    <h5 class="mb-0"><i class="bi bi-chat-dots me-2"></i>Commentaires ({{ product.comments.count }})</h5>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Formulaire de commentaire -->
+                    {% if user.is_authenticated %}
+                    <form id="comment-form" method="POST" action="{% url 'add_comment' product.id %}" class="mb-4">
+                        {% csrf_token %}
+                        <div class="input-group">
+                            <input type="text" name="content" class="form-control rounded-pill" placeholder="Écrire un commentaire..." required>
+                            <button type="submit" class="btn btn-primary rounded-pill">
+                                <i class="bi bi-send"></i>
+                            </button>
+                        </div>
+                    </form>
+                    {% else %}
+                    <p class="text-muted text-center py-3">Connectez-vous pour commenter</p>
+                    {% endif %}
+
+                    <!-- Liste des commentaires -->
+                    <div id="comments-list">
+                        {% for comment in comments %}
+                        <div class="comment-item p-3 mb-3 rounded-4" style="background: #f8f9fa;">
+                            <div class="d-flex align-items-start">
+                                <div class="avatar-circle me-3" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #FF6B35, #E63946); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                                    {{ comment.user.username|first|upper }}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <strong class="d-block">{{ comment.user.username }}</strong>
+                                    <p class="mb-1">{{ comment.content }}</p>
+                                    <small class="text-muted">{{ comment.created_at|timesince }} ago</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted text-center py-4">Aucun commentaire pour le moment</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Avis -->
+            <div class="card border-0 shadow-lg product-detail-secondary-card" style="border-radius: 20px;">
+                <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #F7B801, #FF6B35); border: none;">
+                    <h5 class="mb-0"><i class="bi bi-star me-2"></i>Avis ({{ product.reviews.count }})</h5>
+                </div>
+                <div class="card-body p-4">
+                    {% if user.is_authenticated %}
+                    <button class="btn btn-primary rounded-pill mb-4" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                        <i class="bi bi-plus-circle me-2"></i>Ajouter un avis
+                    </button>
+                    {% endif %}
+
+                    {% for review in reviews %}
+                    <div class="review-item p-3 mb-3 rounded-4" style="background: #f8f9fa;">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <strong>{{ review.user.username }}</strong>
+                            <div>
+                                {% for i in "12345"|make_list %}
+                                <i class="bi bi-star{% if forloop.counter <= review.rating %}-fill text-warning{% endif %}"></i>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% if review.comment %}
+                        <p class="mb-1">{{ review.comment }}</p>
+                        {% endif %}
+                        <small class="text-muted">{{ review.created_at|timesince }} ago</small>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center py-4">Aucun avis pour le moment</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Produits similaires -->
+            {% if recommended_products %}
+            <div class="card border-0 shadow-lg mb-4" style="border-radius: 20px;">
+                <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #7209B7, #4facfe); border: none;">
+                    <h6 class="mb-0">Produits similaires</h6>
+                </div>
+                <div class="card-body p-3">
+                    {% for rec_product in recommended_products %}
+                    <div class="d-flex mb-3 p-2 rounded-3 product-detail-sidebar-item" style="background: #f8f9fa; cursor: pointer;" onclick="window.location='{% url 'product_detail' rec_product.id %}'">
+                        <img src="{{ rec_product.image.url }}" alt="{{ rec_product.name }}" class="rounded me-2" style="width: 60px; height: 60px; object-fit: cover;">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0 small">{{ rec_product.name|truncatewords:5 }}</h6>
+                            <strong class="text-danger small">{{ rec_product.price }} {{ rec_product.currency }}</strong>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour avis -->
+{% if user.is_authenticated %}
+<div class="modal fade" id="reviewModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-4">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Ajouter un avis</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{% url 'add_review' product.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Note</label>
+                        <select name="rating" class="form-select" required>
+                            <option value="5">5 étoiles</option>
+                            <option value="4">4 étoiles</option>
+                            <option value="3">3 étoiles</option>
+                            <option value="2">2 étoiles</option>
+                            <option value="1">1 étoile</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Commentaire</label>
+                        <textarea name="comment" class="form-control" rows="4"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary rounded-pill">Publier</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+// Like/Unlike
+function toggleLike() {
+    {% if user.is_authenticated %}
+    fetch('{% url "toggle_like" product.id %}', {
+        method: 'POST',
+        headers: {'X-CSRFToken': '{{ csrf_token }}'}
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('likes-count').textContent = data.likes_count + ' likes';
+            const icon = document.getElementById('like-icon');
+            const text = document.getElementById('like-text');
+            if (data.is_liked) {
+                icon.className = 'bi bi-heart-fill';
+                text.textContent = 'Unlike';
+            } else {
+                icon.className = 'bi bi-heart';
+                text.textContent = 'Like';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Une erreur est survenue');
+    });
+    {% else %}
+    window.location.href = '{% url "login" %}';
+    {% endif %}
+}
+
+// Favorite/Unfavorite
+function toggleFavorite() {
+    {% if user.is_authenticated %}
+    fetch('{% url "toggle_favorite" product.id %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const icon = document.getElementById('favorite-icon');
+            if (data.is_favorite) {
+                icon.className = 'bi bi-star-fill';
+            } else {
+                icon.className = 'bi bi-star';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Une erreur est survenue');
+    });
+    {% else %}
+    window.location.href = '{% url "login" %}';
+    {% endif %}
+}
+
+// Partager
+function shareProduct() {
+    const url = window.location.href;
+    if (navigator.share) {
+        navigator.share({
+            title: '{{ product.name }}',
+            text: '{{ product.description|truncatewords:20 }}',
+            url: url
+        });
+    } else {
+        navigator.clipboard.writeText(url);
+        alert('Lien copié !');
+    }
+}
+
+// Commander via WhatsApp avec localisation
+function orderViaWhatsApp() {
+    const btn = document.querySelector('.whatsapp-btn');
+    if (btn) btn.classList.add('loading');
+    
+    // Message par défaut
+    const defaultMessage = `Bonjour, je suis intéressé par le produit suivant :\n\n` +
+                         `*${'{{ product.name|escapejs }}'}*\n` +
+                         `Prix : ${'{{ product.price|floatformat:0 }}'} FCFA\n` +
+                         `Boutique : ${'{{ product.store.name|escapejs }}'}\n\n` +
+                         `Pouvez-vous me fournir plus d'informations ?`;
+    
+    // Encoder le message pour l'URL
+    const encodedMessage = encodeURIComponent(defaultMessage);
+    
+    // Utiliser le numéro de téléphone par défaut (22601256984)
+    const phoneNumber = '22601256984';
+    
+    // Construire l'URL WhatsApp
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+    
+    // Ouvrir la conversation WhatsApp
+    window.open(whatsappUrl, '_blank');
+    
+    // Envoyer une requête au serveur pour enregistrer l'action
+    fetch('{% url "payments:send_whatsapp_ajax" product.id %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFTTOKEN': '{{ csrf_token }}',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: `phone_number=${phoneNumber}&message=${encodeURIComponent(defaultMessage)}`
+    }).catch(error => {
+        console.error('Erreur lors de l\'enregistrement du message WhatsApp:', error);
+    }).finally(() => {
+        if (btn) btn.classList.remove('loading');
+    });
+}
+
+// Commentaires produits en AJAX
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('comment-form');
+    if (!form) return;
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const input = form.querySelector('input[name="content"]');
+        if (!input) return;
+        const content = input.value.trim();
+        if (!content) return;
+
+        const url = form.getAttribute('action');
+        const csrfInput = form.querySelector('input[name="csrfmiddlewaretoken"]');
+        const csrfToken = csrfInput ? csrfInput.value : (typeof CSRF_TOKEN !== 'undefined' ? CSRF_TOKEN : '');
+
+        const formData = new FormData();
+        formData.append('content', content);
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken
+            },
+            body: formData
+        })
+        .then(resp => resp.json())
+        .then(data => {
+            if (!data.success) {
+                alert(data.error || "Erreur lors de l'envoi du commentaire");
+                return;
+            }
+            const list = document.getElementById('comments-list');
+            if (!list) return;
+
+            const c = data.comment;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'comment-item p-3 mb-3 rounded-4 comment-item-new';
+            wrapper.style.background = '#f8f9fa';
+            wrapper.innerHTML = `
+                <div class="d-flex align-items-start">
+                    <div class="avatar-circle me-3" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #FF6B35, #E63946); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                        ${c.user.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="flex-grow-1">
+                        <strong class="d-block">${c.user}</strong>
+                        <p class="mb-1">${c.content}</p>
+                        <small class="text-muted">À l'instant</small>
+                    </div>
+                </div>
+            `;
+            list.insertBefore(wrapper, list.firstChild);
+            input.value = '';
+        })
+        .catch(err => {
+            console.error('Erreur commentaire produit:', err);
+            alert("Erreur lors de l'envoi du commentaire");
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }} - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .product-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        margin-bottom: 20px;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .product-image {
+        height: 200px;
+        object-fit: cover;
+        width: 100%;
+    }
+    .store-verified {
+        color: #28a745;
+        font-size: 14px;
+    }
+    .product-price {
+        font-weight: bold;
+        color: #28a745;
+        font-size: 1.2em;
+    }
+    .promo-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: #ffc107;
+        color: #000;
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    .verified-badge {
+        color: #17a2b8;
+        font-size: 12px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">{{ page_title }}</h2>
+    
+    <!-- Boutiques recommandées (pour les vendeurs) -->
+    {% if recommended_stores %}
+    <div class="mb-5">
+        <h4 class="mb-3">Boutiques recommandées</h4>
+        <div class="row">
+            {% for store in recommended_stores %}
+            <div class="col-md-2 col-6 mb-3">
+                <a href="{% url 'store_detail' store.id %}" class="text-decoration-none text-dark">
+                    <div class="text-center">
+                        <img src="{{ store.logo.url|default:'/static/img/default-store.png' }}" 
+                             class="rounded-circle mb-2" width="80" height="80" 
+                             style="object-fit: cover; border: 2px solid #f8f9fa; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <div class="small">
+                            {{ store.name|truncatechars:15 }}
+                            {% if store.is_verified %}
+                            <i class="fas fa-check-circle verified-badge" title="Boutique vérifiée"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Boutiques vérifiées en vedette -->
+    {% if verified_stores %}
+    <div class="mb-5">
+        <h4 class="mb-3">Boutiques en vedette</h4>
+        <div class="row">
+            {% for store in verified_stores %}
+            <div class="col-md-2 col-6 mb-3">
+                <a href="{% url 'store_detail' store.id %}" class="text-decoration-none text-dark">
+                    <div class="text-center">
+                        <img src="{{ store.logo.url|default:'/static/img/default-store.png' }}" 
+                             class="rounded-circle mb-2" width="80" height="80"
+                             style="object-fit: cover; border: 2px solid #f8f9fa; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <div class="small">
+                            {{ store.name|truncatechars:15 }}
+                            <i class="fas fa-check-circle verified-badge" title="Boutique vérifiée"></i>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Fil d'actualité principal -->
+    <div class="row">
+        {% for product in feed_products %}
+        <div class="col-lg-3 col-md-4 col-6 mb-4">
+            <div class="card h-100 product-card">
+                <a href="{% url 'product_detail' product.id %}">
+                    <div class="position-relative">
+                        <img src="{{ product.images.first.image.url|default:'/static/img/default-product.png' }}" 
+                             class="card-img-top product-image" alt="{{ product.name }}">
+                        {% if product.promotions.active %}
+                        <span class="promo-badge">PROMO</span>
+                        {% elif product.store.is_verified %}
+                        <span class="promo-badge" style="background-color: #17a2b8;">VERIFIE</span>
+                        {% endif %}
+                    </div>
+                </a>
+                <div class="card-body">
+                    <h6 class="card-title mb-1">
+                        <a href="{% url 'product_detail' product.id %}" class="text-dark">
+                            {{ product.name|truncatechars:30 }}
+                        </a>
+                    </h6>
+                    <p class="mb-1">
+                        <a href="{% url 'store_detail' product.store.id %}" class="text-muted small">
+                            {{ product.store.name }}
+                            {% if product.store.is_verified %}
+                            <i class="fas fa-check-circle verified-badge" title="Boutique vérifiée"></i>
+                            {% endif %}
+                        </a>
+                    </p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="product-price">
+                            {% if product.promotions.active %}
+                            <span class="text-danger">{{ product.get_discounted_price|floatformat:2 }} {{ CURRENCY.symbol }}</span>
+                            <small class="text-muted text-decoration-line-through">{{ product.price|floatformat:2 }} {{ CURRENCY.symbol }}</small>
+                            {% else %}
+                            {{ product.price|floatformat:2 }} {{ CURRENCY.symbol }}
+                            {% endif %}
+                        </span>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-secondary like-btn" data-product-id="{{ product.id }}">
+                                <i class="far fa-heart"></i> {{ product.likes.count }}
+                            </button>
+                            <a href="{% url 'product_detail' product.id %}#comments" class="btn btn-sm btn-outline-secondary">
+                                <i class="far fa-comment"></i> {{ product.comments.count }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="text-muted">
+                <i class="fas fa-box-open fa-3x mb-3"></i>
+                <h4>Aucun produit trouvé</h4>
+                <p>Essayez de modifier vos critères de recherche ou revenez plus tard.</p>
+                {% if not user.is_authenticated %}
+                <a href="{% url 'login' %}" class="btn btn-primary">Connectez-vous pour voir plus de contenu</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Catégories populaires -->
+    {% if categories %}
+    <div class="mt-5">
+        <h4 class="mb-3">Catégories populaires</h4>
+        <div class="row">
+            {% for category in categories %}
+            <div class="col-md-2 col-4 mb-3">
+                <a href="{% url 'search' %}?category={{ category.id }}" class="text-decoration-none">
+                    <div class="card h-100 text-center">
+                        <div class="card-body">
+                            <i class="fas {{ category.icon|default:'fa-tag' }} fa-2x text-primary mb-2"></i>
+                            <h6 class="card-title mb-0">{{ category.name }}</h6>
+                            <small class="text-muted">{{ category.product_count }} produits</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Gestion des likes
+$(document).on('click', '.like-btn', function() {
+    const button = $(this);
+    const productId = button.data('product-id');
+    const url = `/stores/toggle-like/${productId}/`;
+    
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: {
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        },
+        success: function(response) {
+            if (response.liked) {
+                button.removeClass('btn-outline-secondary').addClass('btn-danger');
+                button.find('i').removeClass('far').addClass('fas');
+            } else {
+                button.removeClass('btn-danger').addClass('btn-outline-secondary');
+                button.find('i').removeClass('fas').addClass('far');
+            }
+            button.find('i').next().text(' ' + response.likes_count);
+        },
+        error: function(xhr, status, error) {
+            if (xhr.status === 403) {
+                window.location.href = '{% url "login" %}';
+            } else {
+                alert('Une erreur est survenue. Veuillez réessayer.');
+            }
+        }
+    });
+});
+
+// Initialisation des tooltips
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip();
+    
+    // Mise à jour du compteur de caractères pour la recherche
+    $('.search-input').on('input', function() {
+        const maxLength = $(this).attr('maxlength');
+        const currentLength = $(this).val().length;
+        $('.char-count').text(currentLength + '/' + maxLength);
+    });
+});
+</script>
+{% endblock %}

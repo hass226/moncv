@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">{{ title }}</h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4">
+                        Entrez les détails de votre paiement pour vérification. 
+                        Une fois vérifié, votre compte sera crédité automatiquement.
+                    </p>
+                    
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.payment_method.id_for_label }}" class="form-label">
+                                {{ form.payment_method.label }}
+                            </label>
+                            {{ form.payment_method }}
+                            <div class="invalid-feedback">
+                                Veuillez sélectionner une méthode de paiement.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.transaction_id.id_for_label }}" class="form-label">
+                                {{ form.transaction_id.label }}
+                            </label>
+                            {{ form.transaction_id }}
+                            <div class="form-text">
+                                Exemple: OM12345678, MTN987654, etc.
+                            </div>
+                            <div class="invalid-feedback">
+                                Veuillez entrer un code de transaction valide.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.amount.id_for_label }}" class="form-label">
+                                {{ form.amount.label }}
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">FCFA</span>
+                                {{ form.amount }}
+                            </div>
+                            <div class="invalid-feedback">
+                                Veuillez entrer un montant valide.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.phone_number.id_for_label }}" class="form-label">
+                                {{ form.phone_number.label }}
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">+225</span>
+                                {{ form.phone_number }}
+                            </div>
+                            <div class="form-text">
+                                Facultatif, mais recommandé pour un meilleur suivi.
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-check-circle me-2"></i>Vérifier le paiement
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-muted text-center">
+                    <small>
+                        En cas de problème, contactez le support à 
+                        <a href="mailto:support@votresite.com">support@votresite.com</a>
+                    </small>
+                </div>
+            </div>
+            
+            <div class="mt-4 text-center">
+                <a href="{% url 'my_transactions' %}" class="text-decoration-none">
+                    <i class="fas fa-history me-1"></i> Voir l'historique de mes transactions
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add form validation script -->
+<script>
+// Example starter JavaScript for disabling form submissions if there are invalid fields
+(function () {
+  'use strict'
+
+  // Fetch all the forms we want to apply custom Bootstrap validation styles to
+  var forms = document.querySelectorAll('.needs-validation')
+
+  // Loop over them and prevent submission
+  Array.prototype.slice.call(forms)
+    .forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+
+        form.classList.add('was-validated')
+      }, false)
+    })
+})()
+</script>
+{% endblock %}

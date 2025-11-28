@@ -1,0 +1,318 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ live_stream.title }} - Live{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 reel-page">
+    <div class="row justify-content-center">
+        <!-- Reel Video Area + Comments stacked -->
+        <div class="col-lg-6 col-md-8 mb-4">
+            <div class="reel-card card border-0 shadow-lg">
+                <div class="reel-video-wrapper position-relative">
+                    {% if live_stream.status == 'live' %}
+                    <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center">
+                        {% if live_stream.hls_url %}
+                        <!-- Player vidéo pour tous les viewers (reel) -->
+                        <video id="reel-video" src="{{ live_stream.hls_url }}" controls autoplay playsinline
+                               class="reel-video"></video>
+                        {% elif is_owner %}
+                        <!-- Fallback: prévisualisation locale pour le propriétaire si aucun flux externe n'est défini -->
+                        <video id="live-video" autoplay muted playsinline class="reel-video"></video>
+                        {% else %}
+                        <div class="text-center text-white">
+                            <div class="spinner-border text-danger mb-3" role="status" style="width: 4rem; height: 4rem;">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <h4>Stream en cours...</h4>
+                            <p class="text-muted">Le stream va commencer bientôt</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-gradient" style="background: linear-gradient(135deg, #FF6B35, #E63946);">
+                        <div class="text-center text-white">
+                            <i class="bi bi-camera-video-off" style="font-size: 5rem;"></i>
+                            <h4 class="mt-3">Stream terminé</h4>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Live badge + infos overlay -->
+                    <div class="reel-overlay-top d-flex justify-content-between align-items-center">
+                        {% if live_stream.status == 'live' %}
+                        <span class="badge bg-danger px-4 py-2 rounded-pill pulse-live">
+                            <span class="spinner-grow spinner-grow-sm me-2" role="status"></span>
+                            EN DIRECT
+                        </span>
+                        {% endif %}
+                        <span class="badge bg-dark px-3 py-2 rounded-pill">
+                            <i class="bi bi-eye me-1"></i><span id="viewers-count">{{ live_stream.viewers_count }}</span> viewers
+                        </span>
+                    </div>
+                </div>
+                <div class="reel-info card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <h5 class="fw-bold mb-1">{{ live_stream.title }}</h5>
+                            <p class="text-muted mb-0 small">{{ live_stream.store.name }}</p>
+                        </div>
+                        {% if user.is_authenticated %}
+                        <button class="btn btn-sm btn-outline-light rounded-pill" id="follow-live-store-btn" onclick="toggleFollowLiveStore({{ live_stream.store.id }})">
+                            <i class="bi bi-person-plus me-1"></i>Suivre
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% if live_stream.description %}
+                    <p class="mb-0 small text-light-50">{{ live_stream.description }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Produits associés au reel -->
+            <div class="card border-0 shadow-lg mt-4" style="border-radius: 16px; overflow: hidden;">
+                <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #7209B7, #4facfe); border: none;">
+                    <h5 class="mb-0"><i class="bi bi-bag me-2"></i>Produits en Live</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        {% for live_product in live_products %}
+                        <div class="col-md-6">
+                            <div class="product-card p-3 border rounded-4" style="transition: all 0.3s;">
+                                <div class="d-flex">
+                                    <img src="{{ live_product.product.image.url }}" alt="{{ live_product.product.name }}" 
+                                         class="rounded-3 me-3" style="width: 80px; height: 80px; object-fit: cover;">
+                                    <div class="flex-grow-1">
+                                        <h6 class="fw-bold mb-1">{{ live_product.product.name }}</h6>
+                                        <p class="text-danger fw-bold mb-0">
+                                            {{ live_product.live_price|default:live_product.product.price }} XOF
+                                        </p>
+                                        <small class="text-muted">{{ live_product.purchases_count }} achat(s)</small>
+                                    </div>
+                                </div>
+                                {% if live_stream.status == 'live' %}
+                                <button onclick="purchaseProduct({{ live_product.id }})" 
+                                        class="btn btn-sm btn-primary w-100 mt-2 rounded-pill">
+                                    <i class="bi bi-cart-plus me-1"></i>ACHETER
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12 text-center py-4">
+                            <p class="text-muted">Aucun produit ajouté au live</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <!-- Commentaires (sous la vidéo / produits) -->
+            <div id="live-comments" class="card border-0 shadow-lg mt-4" style="border-radius: 16px; overflow: hidden; max-height: 600px;">
+                <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #00C896, #4facfe); border: none;">
+                    <h5 class="mb-0"><i class="bi bi-chat-dots me-2"></i>Commentaires</h5>
+                </div>
+                <div class="card-body p-3" style="overflow-y: auto; max-height: 400px;" id="comments-container">
+                    {% for comment in comments %}
+                    <div class="comment-item mb-3 p-2 rounded-3" style="background: #f8f9fa;">
+                        <div class="d-flex align-items-start">
+                            <div class="avatar-circle me-2" style="width: 35px; height: 35px; border-radius: 50%; background: linear-gradient(135deg, #FF6B35, #E63946); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                                {{ comment.user.username|first|upper }}
+                            </div>
+                            <div class="flex-grow-1">
+                                <strong class="d-block">{{ comment.user.username }}</strong>
+                                <p class="mb-0 small">{{ comment.content }}</p>
+                                <small class="text-muted">{{ comment.created_at|timesince }} ago</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center py-4">Aucun commentaire pour le moment</p>
+                    {% endfor %}
+                </div>
+                {% if live_stream.status == 'live' %}
+                <div class="card-footer bg-light border-0">
+                    <div class="input-group">
+                        <input type="text" class="form-control rounded-pill" id="comment-input" placeholder="Écrire un commentaire...">
+                        <button class="btn btn-primary rounded-pill" onclick="sendComment()">
+                            <i class="bi bi-send"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Stream Info -->
+            <div class="card border-0 shadow-lg mt-4" style="border-radius: 20px; overflow: hidden;">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3">Statistiques</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Viewers</span>
+                        <strong>{{ live_stream.viewers_count }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Ventes totales</span>
+                        <strong class="text-success">{{ live_stream.total_sales|floatformat:0 }} XOF</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Commandes</span>
+                        <strong>{{ live_stream.total_orders }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const liveId = {{ live_stream.id }};
+
+function sendComment() {
+    const input = document.getElementById('comment-input');
+    if (!input) return;
+    const content = input.value.trim();
+    if (!content) return;
+
+    const csrfToken = (typeof CSRF_TOKEN !== 'undefined') ? CSRF_TOKEN : '{{ csrf_token }}';
+
+    fetch('{% url "add_live_comment" live_stream.id %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken
+        },
+        body: new URLSearchParams({content})
+    })
+    .then(resp => resp.json())
+    .then(data => {
+        if (!data.success) {
+            alert(data.error || 'Erreur lors de l\'envoi du commentaire');
+            return;
+        }
+        addComment(data.comment);
+        input.value = '';
+    })
+    .catch(err => {
+        console.error('Erreur commentaire live:', err);
+        alert('Erreur lors de l\'envoi du commentaire');
+    });
+}
+
+function addComment(comment) {
+    const container = document.getElementById('comments-container');
+    const div = document.createElement('div');
+    div.className = 'comment-item mb-3 p-2 rounded-3 comment-item-new';
+    div.style.background = '#f8f9fa';
+    div.innerHTML = `
+        <div class="d-flex align-items-start">
+            <div class="avatar-circle me-2" style="width: 35px; height: 35px; border-radius: 50%; background: linear-gradient(135deg, #FF6B35, #E63946); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                ${comment.user.charAt(0).toUpperCase()}
+            </div>
+            <div class="flex-grow-1">
+                <strong class="d-block">${comment.user}</strong>
+                <p class="mb-0 small">${comment.content}</p>
+                <small class="text-muted">À l'instant</small>
+            </div>
+        </div>
+    `;
+    container.insertBefore(div, container.firstChild);
+    container.scrollTop = 0;
+}
+
+function startLive() {
+    fetch(`/live/${liveId}/start/`, {method: 'POST', headers: {'X-CSRFToken': '{{ csrf_token }}'}})
+        .then(() => location.reload());
+}
+
+function endLive() {
+    fetch(`/live/${liveId}/end/`, {method: 'POST', headers: {'X-CSRFToken': '{{ csrf_token }}'}})
+        .then(() => location.reload());
+}
+
+function purchaseProduct(productId) {
+    if (confirm('Confirmer l\'achat ?')) {
+        fetch(`/live/${liveId}/purchase/`, {
+            method: 'POST',
+            headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json'},
+            body: JSON.stringify({product_id: productId, quantity: 1})
+        }).then(() => alert('Achat effectué !'));
+    }
+}
+
+function toggleFollowLiveStore(storeId) {
+    const btn = document.getElementById('follow-live-store-btn');
+    const csrfToken = (typeof CSRF_TOKEN !== 'undefined') ? CSRF_TOKEN : '{{ csrf_token }}';
+
+    fetch(`/store/${storeId}/follow/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(resp => resp.json())
+    .then(data => {
+        if (!data.success) return;
+        if (data.is_following) {
+            btn.innerHTML = '<i class="bi bi-person-check me-1"></i>Déjà abonné';
+            btn.classList.remove('btn-outline-light');
+            btn.classList.add('btn-light', 'text-dark');
+            // Rendre le bouton non cliquable pour éviter de se désabonner depuis le live
+            btn.disabled = true;
+        } else {
+            btn.innerHTML = '<i class="bi bi-person-plus me-1"></i>Suivre la boutique';
+            btn.classList.add('btn-outline-light');
+        }
+
+        // Après follow/unfollow, faire défiler vers la zone de commentaires
+        const commentsBlock = document.getElementById('live-comments');
+        if (commentsBlock && commentsBlock.scrollIntoView) {
+            commentsBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    })
+    .catch(err => console.error('Erreur follow live store:', err));
+}
+
+// Prévisualisation caméra pour le propriétaire du live
+document.addEventListener('DOMContentLoaded', function() {
+    const isOwner = {{ is_owner|yesno:'true,false' }};
+    const isLive = '{{ live_stream.status }}' === 'live';
+    if (!isOwner || !isLive) {
+        return;
+    }
+
+    const videoEl = document.getElementById('live-video');
+    if (!videoEl || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        return;
+    }
+
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+        .then(stream => {
+            videoEl.srcObject = stream;
+        })
+        .catch(err => {
+            console.error('Erreur accès caméra:', err);
+            alert("Impossible d'accéder à la caméra. Vérifie les autorisations du navigateur et que tu es en HTTPS ou sur localhost.");
+        });
+});
+</script>
+
+<style>
+.pulse-live {
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+.comment-item-new {
+    animation: fadeInUp 0.3s ease-out;
+}
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+{% endblock %}
+

@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+{% load i18n static %}
+
+{% block title %}{% trans 'Paiement' %}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 mb-0">
+                        <i class="fas fa-credit-card me-2"></i>
+                        {% if plan %}
+                            {% blocktrans with plan_name=plan.name %}Paiement - {{ plan_name }}{% endblocktrans %}
+                        {% else %}
+                            {% trans 'Effectuer un paiement' %}
+                        {% endif %}
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning" role="alert">
+                        <h5 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Service de paiement temporairement indisponible</h5>
+                        <p>Notre système de paiement en ligne est actuellement en cours de maintenance. Veuillez nous contacter directement pour effectuer votre paiement :</p>
+                        <p class="mb-0">
+                            <a href="https://wa.me/22601256984" class="btn btn-success me-2 mb-2">
+                                <i class="fab fa-whatsapp me-1"></i> WhatsApp
+                            </a>
+                            <a href="tel:+22601256984" class="btn btn-primary mb-2">
+                                <i class="fas fa-phone me-1"></i> Appeler le +226 01 25 69 84
+                            </a>
+                        </p>
+                    </div>
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{% trans 'Fermer' %}"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-7">
+                            <form method="post" id="payment-form">
+                                {% csrf_token %}
+                                
+                                {% if form.non_field_errors %}
+                                    <div class="alert alert-danger">
+                                        {% for error in form.non_field_errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+
+                                <div class="mb-4">
+                                    <h5 class="mb-3">{% trans 'Méthode de paiement' %}</h5>
+                                    {% for choice in form.payment_method %}
+                                        <div class="form-check mb-2">
+                                            {{ choice.tag }}
+                                            <label for="{{ choice.id_for_label }}" class="form-check-label d-flex align-items-center">
+                                                {% if choice.choice_label == 'Orange Money' %}
+                                                    <img src="{% static 'img/orange-money.png' %}" alt="Orange Money" class="me-2" style="height: 24px;">
+                                                {% elif choice.choice_label == 'MTN Mobile Money' %}
+                                                    <img src="{% static 'img/mtn-money.png' %}" alt="MTN Mobile Money" class="me-2" style="height: 24px;">
+                                                {% elif choice.choice_label == 'Moov Money' %}
+                                                    <img src="{% static 'img/moov-money.png' %}" alt="Moov Money" class="me-2" style="height: 24px;">
+                                                {% elif choice.choice_label == 'Wave' %}
+                                                    <img src="{% static 'img/wave.png' %}" alt="Wave" class="me-2" style="height: 24px;">
+                                                {% elif choice.choice_label == 'PayPal' %}
+                                                    <img src="{% static 'img/paypal.png' %}" alt="PayPal" class="me-2" style="height: 24px;">
+                                                {% elif choice.choice_label == 'Carte Bancaire' %}
+                                                    <i class="fas fa-credit-card me-2"></i>
+                                                {% endif %}
+                                                {{ choice.choice_label }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                    {% if form.payment_method.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.payment_method.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div id="phone-number-field" class="mb-4" style="display: none;">
+                                    <label for="{{ form.phone_number.id_for_label }}" class="form-label">
+                                        {% trans 'Numéro de téléphone' %}
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                        {{ form.phone_number }}
+                                    </div>
+                                    {% if form.phone_number.help_text %}
+                                        <div class="form-text">{{ form.phone_number.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.phone_number.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.phone_number.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="{{ form.amount.id_for_label }}" class="form-label">
+                                        {% trans 'Montant à payer' %}
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">{{ CURRENCY_SYMBOL }}</span>
+                                        {{ form.amount }}
+                                    </div>
+                                    {% if form.amount.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.amount.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary btn-lg">
+                                        <i class="fas fa-lock me-2"></i>
+                                        {% if plan %}
+                                            {% trans 'Payer maintenant' %} ({{ plan.price }} {{ CURRENCY }})
+                                        {% else %}
+                                            {% trans 'Payer maintenant' %}
+                                        {% endif %}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <div class="col-md-5">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title">{% trans 'Résumé de la commande' %}</h5>
+                                    <hr>
+                                    
+                                    {% if plan %}
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <span>{% trans 'Abonnement' %}:</span>
+                                            <strong>{{ plan.name }}</strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <span>{% trans 'Durée' %}:</span>
+                                            <span>{{ plan.duration_days }} {% trans 'jours' %}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <span>{% trans 'Prix' %}:</span>
+                                            <strong>{{ plan.price }} {{ CURRENCY }}</strong>
+                                        </div>
+                                    {% else %}
+                                        <p class="text-muted">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            {% trans 'Entrez le montant que vous souhaitez payer.' %}
+                                        </p>
+                                    {% endif %}
+                                    
+                                    <hr>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="h5 mb-0">{% trans 'Total' %}:</span>
+                                        <span class="h4 mb-0 text-primary fw-bold">
+                                            {% if plan %}
+                                                {{ plan.price }} {{ CURRENCY }}
+                                            {% else %}
+                                                <span id="total-amount">0.00</span> {{ CURRENCY }}
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="mt-4">
+                                        <p class="small text-muted">
+                                            <i class="fas fa-lock me-1"></i>
+                                            {% trans 'Paiement sécurisé via notre plateforme.' %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Afficher/masquer le champ de numéro de téléphone en fonction de la méthode de paiement
+        const paymentMethodSelect = document.querySelectorAll('input[name="payment_method"]');
+        const phoneNumberField = document.getElementById('phone-number-field');
+        
+        function togglePhoneField() {
+            const selectedMethod = document.querySelector('input[name="payment_method"]:checked');
+            if (selectedMethod && ['orange', 'mtn', 'moov', 'wave'].includes(selectedMethod.value)) {
+                phoneNumberField.style.display = 'block';
+            } else {
+                phoneNumberField.style.display = 'none';
+            }
+        }
+        
+        paymentMethodSelect.forEach(input => {
+            input.addEventListener('change', togglePhoneField);
+        });
+        
+        // Mettre à jour le montant total si l'utilisateur modifie le champ de montant
+        const amountInput = document.getElementById('{{ form.amount.id_for_label }}');
+        const totalAmount = document.getElementById('total-amount');
+        
+        if (amountInput && totalAmount) {
+            amountInput.addEventListener('input', function() {
+                const value = parseFloat(this.value) || 0;
+                totalAmount.textContent = value.toFixed(2);
+            });
+        }
+        
+        // Initialiser l'affichage
+        togglePhoneField();
+    });
+</script>
+{% endblock %}

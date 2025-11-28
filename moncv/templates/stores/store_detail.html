@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+{% load currency_tags %}
+
+{% block title %}{{ store.name }} - MYMEDAGA{% endblock %}
+
+{% block meta_title %}{{ store.name }} - Boutique sur MYMEDAGA{% endblock %}
+{% block meta_description %}{{ store.description|default:"Boutique sur MYMEDAGA"|truncatewords:25 }}{% endblock %}
+{% block meta_keywords %}{{ store.name }}, boutique, produits, {{ store.whatsapp_number }}, boutique vérifiée, jeunes vendeurs, MYMEDAGA{% endblock %}
+
+{% block og_title %}{{ store.name }} - Boutique en ligne sur MYMEDAGA{% endblock %}
+{% block og_description %}Découvrez les produits de {{ store.name }} sur MYMEDAGA : boutique de jeunes vendeurs en Afrique.{% endblock %}
+
+{% block twitter_title %}{{ store.name }} sur MYMEDAGA{% endblock %}
+{% block twitter_description %}Parcourez les produits et contactez {{ store.name }} directement via WhatsApp sur MYMEDAGA.{% endblock %}
+
+{% block extra_css %}
+<style>
+    .product-price {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 1.8rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, var(--primary-green), #00A878);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 15px;
+    }
+    .section-title h2 {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 2rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, var(--primary-yellow), var(--primary-orange));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .featured-badge {
+        background: linear-gradient(135deg, var(--primary-purple), #9D4EDD);
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        box-shadow: 0 3px 10px rgba(114, 9, 183, 0.5);
+    }
+    .verified-badge {
+        background: linear-gradient(135deg, var(--primary-yellow), var(--primary-orange));
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        box-shadow: 0 3px 10px rgba(247, 184, 1, 0.5);
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    .product-card {
+        position: relative;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .product-card:hover {
+        transform: translateY(-6px) scale(1.01);
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+    }
+    .whatsapp-btn {
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .whatsapp-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(37, 211, 102, 0.6);
+    }
+</style>
+<script>
+function toggleFollow(storeId) {
+    fetch(`/store/${storeId}/follow/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const btn = document.getElementById('follow-btn');
+            const text = document.getElementById('follow-text');
+            if (data.is_following) {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-outline-danger');
+                text.textContent = 'Ne plus suivre';
+                btn.innerHTML = '<i class="bi bi-person-dash"></i> <span>Ne plus suivre</span>';
+            } else {
+                btn.classList.remove('btn-outline-danger');
+                btn.classList.add('btn-primary');
+                text.textContent = 'Suivre';
+                btn.innerHTML = '<i class="bi bi-person-plus"></i> <span>Suivre</span>';
+            }
+        }
+    });
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4 fade-section">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-3 text-center">
+                        {% if store.logo %}
+                            <img src="{{ store.logo.url }}" alt="{{ store.name }}" class="store-logo mb-3">
+                        {% else %}
+                            <div class="store-logo bg-secondary d-flex align-items-center justify-content-center mb-3">
+                                <i class="bi bi-shop text-white" style="font-size: 3rem;"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-9">
+                        <h1 class="display-5">
+                            {{ store.name }}
+                            {% if store.is_verified %}
+                            <span class="verified-badge" style="position: static; display: inline-block; margin-left: 15px; font-size: 0.8rem; padding: 8px 15px;">
+                                <i class="bi bi-check-circle-fill"></i> Boutique Vérifiée
+                            </span>
+                            {% endif %}
+                        </h1>
+                        {% if store.description %}
+                            <p class="lead">{{ store.description }}</p>
+                        {% endif %}
+                    <div class="d-flex gap-3 align-items-center flex-wrap">
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-whatsapp" style="color: #25D366;"></i> 
+                            <a href="https://wa.me/{{ store.whatsapp_number }}" target="_blank" class="text-decoration-none" style="color: var(--primary-orange); font-weight: 600;">
+                                {{ store.whatsapp_number }}
+                            </a>
+                        </p>
+                        <div class="d-flex gap-3">
+                            <small class="text-muted">
+                                <i class="bi bi-people"></i> {{ store.get_followers_count }} followers
+                            </small>
+                            <small class="text-muted">
+                                <i class="bi bi-box"></i> {{ store.get_total_products }} produits
+                            </small>
+                            {% if store.get_average_rating > 0 %}
+                            <small class="text-muted">
+                                <i class="bi bi-star-fill" style="color: var(--primary-yellow);"></i> {{ store.get_average_rating }}/5
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if user.is_authenticated and user != store.owner %}
+                    <div class="mt-3 fade-section">
+                        <button class="btn {% if is_following %}btn-outline-danger{% else %}btn-primary{% endif %} btn-animated" 
+                                id="follow-btn" onclick="toggleFollow({{ store.id }})">
+                            <i class="bi bi-person-{% if is_following %}dash{% else %}plus{% endif %}"></i> 
+                            <span id="follow-text">{% if is_following %}Ne plus suivre{% else %}Suivre{% endif %}</span>
+                        </button>
+                    </div>
+                    {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row fade-section">
+    <div class="col-12 mb-4">
+        <div class="section-title fade-section">
+            <h2>Produits ({{ products.count }})</h2>
+        </div>
+    </div>
+</div>
+
+{% if products %}
+    {% regroup products by category as products_by_category %}
+
+    {% for group in products_by_category %}
+        <div class="row mb-2 fade-section">
+            <div class="col-12 d-flex justify-content-between align-items-center">
+                <h3 class="section-title">
+                    <i class="bi bi-tags"></i>
+                    {% if group.grouper %}
+                        {{ group.grouper.name }}
+                    {% else %}
+                        Autres produits
+                    {% endif %}
+                </h3>
+                <p class="text-muted mb-0 small">
+                    {{ group.list|length }} produit{% if group.list|length > 1 %}s{% endif %}
+                </p>
+            </div>
+        </div>
+
+        <div class="row g-4 fade-section">
+            {% for product in group.list %}
+            <div class="col-md-4 col-lg-3">
+                <div class="card product-card h-100 card-tilt" style="position: relative;">
+                    {% if product.is_currently_featured %}
+                    <span class="featured-badge" style="position: absolute; top: 10px; left: 10px; z-index: 10;">
+                        <i class="bi bi-star-fill"></i> En Vedette
+                    </span>
+                    {% endif %}
+                    <img src="{{ product.image.url }}" class="card-img-top product-image" alt="{{ product.name }}">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ product.name }}</h5>
+                        <p class="card-text text-muted small">{{ product.description|truncatewords:15 }}</p>
+                        <div class="mt-auto">
+                            <p class="product-price"
+                               data-amount="{{ product.price }}"
+                               data-currency="{{ product.currency }}">
+                                {{ product.price }} {{ product.currency }}
+                            </p>
+                            <button onclick="commanderAvecLocalisation({{ product.id }}, '{{ product.name|escapejs }}', '{{ product.price }}', '{{ store.whatsapp_number }}')" 
+                                    class="whatsapp-btn text-center w-100 mb-2 btn-animated" style="border: none; cursor: pointer;">
+                                <span><i class="bi bi-whatsapp"></i> <i class="bi bi-geo-alt"></i> Commander avec localisation</span>
+                            </button>
+                            <a href="https://wa.me/{{ store.whatsapp_number }}?text=Bonjour, j'ai une question à propos de {{ product.name }} ({{ product.price }} {{ product.currency }})." 
+                               target="_blank" 
+                               class="btn btn-outline-success w-100 btn-animated">
+                                <i class="bi bi-chat-dots"></i> Poser une question au vendeur
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% endfor %}
+{% else %}
+<div class="row g-4 fade-section">
+    <div class="col-12">
+        <div class="alert alert-info text-center" style="background: rgba(255,255,255,0.95); border-radius: 20px; border: none; padding: 40px;">
+            <i class="bi bi-info-circle" style="font-size: 3rem; color: var(--primary-orange);"></i>
+            <h4 style="margin-top: 20px; color: var(--text-dark);">Cette boutique n'a pas encore de produits</h4>
+            <p style="color: var(--text-dark);">Revenez bientôt pour découvrir les produits de cette boutique !</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+

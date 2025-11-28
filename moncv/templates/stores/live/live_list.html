@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Live Commerce - MYMEDAGA{% endblock %}
+
+{% block extra_css %}
+<style>
+    .live-hero-title {
+        background: linear-gradient(135deg, #f97316, #facc15, #ef4444);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .live-card {
+        transition: transform 0.4s ease, box-shadow 0.35s ease, opacity 0.4s ease;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        transform: translateY(12px);
+        opacity: 0;
+    }
+
+    .live-card.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .live-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    .pulse-live {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    .pulse-btn {
+        animation: pulse-scale 2s infinite;
+    }
+
+    @keyframes pulse-scale {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="container">
+        <!-- Header avec animation -->
+        <div class="text-center mb-5">
+            <h1 class="display-3 fw-bold mb-3 live-hero-title">
+                🔴 LIVE COMMERCE
+            </h1>
+            <p class="lead text-white">Achetez en direct pendant les streams !</p>
+            {% if user.is_authenticated and user.store %}
+            <a href="{% url 'create_live_stream' %}" class="btn btn-lg btn-danger rounded-pill px-5 mt-3 shadow-lg pulse-btn">
+                <i class="bi bi-camera-video-fill me-2"></i>CRÉER UN LIVE
+            </a>
+            {% endif %}
+        </div>
+
+        <!-- Live Streams en cours -->
+        <div class="row g-4">
+            {% for live in live_streams %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card live-card h-100 border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+                    <div class="position-relative">
+                        {% if live.thumbnail %}
+                        <img src="{{ live.thumbnail.url }}" class="card-img-top" alt="{{ live.title }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                        <div class="card-img-top bg-gradient" style="height: 200px; background: linear-gradient(135deg, #FF6B35, #E63946); display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-camera-video text-white" style="font-size: 4rem;"></i>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Badge LIVE -->
+                        {% if live.status == 'live' %}
+                        <span class="badge bg-danger position-absolute top-0 start-0 m-3 px-3 py-2 rounded-pill pulse-live">
+                            <span class="spinner-grow spinner-grow-sm me-1" role="status"></span>
+                            EN DIRECT
+                        </span>
+                        {% elif live.status == 'scheduled' %}
+                        <span class="badge bg-warning position-absolute top-0 start-0 m-3 px-3 py-2 rounded-pill">
+                            <i class="bi bi-clock me-1"></i>PROGRAMMÉ
+                        </span>
+                        {% endif %}
+                        
+                        <!-- Viewers count -->
+                        <span class="badge bg-dark position-absolute top-0 end-0 m-3 px-3 py-2 rounded-pill">
+                            <i class="bi bi-eye me-1"></i>{{ live.viewers_count }}
+                        </span>
+                    </div>
+                    
+                    <div class="card-body p-4">
+                        <h5 class="card-title fw-bold mb-2">{{ live.title }}</h5>
+                        <p class="text-muted small mb-3">{{ live.store.name }}</p>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <small class="text-muted">
+                                    <i class="bi bi-cash-coin me-1"></i>
+                                    {{ live.total_sales|floatformat:0 }} XOF
+                                </small>
+                            </div>
+                            <div>
+                                <small class="text-muted">
+                                    <i class="bi bi-bag-check me-1"></i>
+                                    {{ live.total_orders }} ventes
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <a href="{% url 'live_stream_detail' live.id %}" class="btn btn-primary w-100 rounded-pill">
+                            {% if live.status == 'live' %}
+                            <i class="bi bi-play-circle me-2"></i>REJOINDRE LE LIVE
+                            {% else %}
+                            <i class="bi bi-info-circle me-2"></i>VOIR LES DÉTAILS
+                            {% endif %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-camera-video-off text-white" style="font-size: 5rem; opacity: 0.5;"></i>
+                <h3 class="text-white mt-3">Aucun live en cours</h3>
+                <p class="text-white-50">Soyez le premier à créer un live stream !</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const cards = document.querySelectorAll('.live-card');
+
+        if ('IntersectionObserver' in window) {
+            const observer = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        obs.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.18 });
+
+            cards.forEach(card => observer.observe(card));
+        } else {
+            cards.forEach(card => card.classList.add('visible'));
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}
+

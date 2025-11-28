@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Boutiques Suivies - MYMEDAGA{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-5">
+            <i class="bi bi-people"></i> Boutiques Suivies
+        </h1>
+        <p class="lead">Les boutiques que vous suivez</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for store in stores %}
+    <div class="col-md-4 col-lg-3">
+        <div class="card" style="border-radius: 20px; overflow: hidden; transition: all 0.3s;">
+            <div class="card-body text-center">
+                {% if store.logo %}
+                    <img src="{{ store.logo.url }}" alt="{{ store.name }}" class="store-logo mb-3">
+                {% else %}
+                    <div class="store-logo bg-secondary d-flex align-items-center justify-content-center mb-3 mx-auto">
+                        <i class="bi bi-shop text-white" style="font-size: 3rem;"></i>
+                    </div>
+                {% endif %}
+                
+                <h5 class="card-title">{{ store.name }}</h5>
+                
+                {% if store.is_verified %}
+                <span class="badge" style="background: linear-gradient(135deg, var(--primary-yellow), var(--primary-orange)); margin-bottom: 10px;">
+                    <i class="bi bi-check-circle-fill"></i> Vérifié
+                </span>
+                {% endif %}
+                
+                <div class="mb-3">
+                    <small class="text-muted d-block">
+                        <i class="bi bi-people"></i> {{ store.get_followers_count }} followers
+                    </small>
+                    <small class="text-muted d-block">
+                        <i class="bi bi-box"></i> {{ store.get_total_products }} produits
+                    </small>
+                    {% if store.get_average_rating > 0 %}
+                    <small class="text-muted d-block">
+                        <i class="bi bi-star-fill" style="color: var(--primary-yellow);"></i> {{ store.get_average_rating }}/5
+                    </small>
+                    {% endif %}
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <a href="{% url 'store_detail' store.id %}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-eye"></i> Voir la boutique
+                    </a>
+                    <button class="btn btn-outline-danger btn-sm" onclick="unfollowStore({{ store.id }})">
+                        <i class="bi bi-person-dash"></i> Ne plus suivre
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info text-center" style="background: rgba(255,255,255,0.95); border-radius: 20px; padding: 40px;">
+            <i class="bi bi-people" style="font-size: 3rem; color: var(--primary-orange);"></i>
+            <h4 style="margin-top: 20px;">Aucune boutique suivie</h4>
+            <p>Commencez à suivre des boutiques pour voir leurs nouveaux produits en premier !</p>
+            <a href="{% url 'home' %}" class="btn btn-primary mt-3">
+                <i class="bi bi-house"></i> Découvrir des boutiques
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+function unfollowStore(storeId) {
+    if (confirm('Ne plus suivre cette boutique ?')) {
+        fetch(`/store/${storeId}/follow/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+}
+</script>
+{% endblock %}
+

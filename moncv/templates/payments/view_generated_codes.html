@@ -1,0 +1,502 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Codes générés avec succès{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #4361ee;
+        --primary-hover: #3a56d4;
+        --secondary: #6c757d;
+        --light: #f8f9fa;
+        --dark: #212529;
+        --success: #20c997;
+        --danger: #ef476f;
+        --warning: #ffd166;
+        --border-radius: 12px;
+        --box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        --transition: all 0.3s ease;
+    }
+    
+    body {
+        background-color: #f5f7fb;
+    }
+    
+    .card {
+        border: none;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        transition: var(--transition);
+        overflow: hidden;
+        background: #ffffff;
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, var(--primary), #5f6af0);
+        color: white;
+        border-bottom: none;
+        padding: 1.5rem 2rem;
+    }
+    
+    .code-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        margin-bottom: 1.25rem;
+        border: 1px solid #e9ecef;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .code-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        border-color: #dee2e6;
+    }
+    
+    .code-card.pending {
+        border-left: 4px solid var(--primary);
+    }
+    
+    .code-card.used {
+        border-left: 4px solid var(--success);
+    }
+    
+    .code-card.expired {
+        border-left: 4px solid var(--secondary);
+    }
+    
+    .code-value {
+        font-family: 'Fira Code', 'Courier New', monospace;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--dark);
+        background: white;
+        padding: 0.75rem 1.25rem;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        transition: var(--transition);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    
+    .code-value:hover {
+        background: #f8f9fa;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .code-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .code-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-top: 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        color: var(--secondary);
+    }
+    
+    .meta-item i {
+        font-size: 1.1em;
+    }
+    
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: var(--transition);
+        border: none;
+    }
+    
+    .btn i {
+        font-size: 1.1em;
+    }
+    
+    .btn-sm {
+        padding: 0.35rem 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    .btn-primary {
+        background-color: var(--primary);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background-color: var(--primary-hover);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+    }
+    
+    .btn-success {
+        background-color: var(--success);
+        color: white;
+    }
+    
+    .btn-success:hover {
+        background-color: #1aa179;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .btn-outline-secondary {
+        border: 1px solid #dee2e6;
+        color: var(--secondary);
+        background: white;
+    }
+    
+    .btn-outline-secondary:hover {
+        background: #f8f9fa;
+        color: var(--dark);
+        border-color: #ced4da;
+    }
+    
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.35rem 0.8rem;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .status-pending {
+        background-color: rgba(67, 97, 238, 0.1);
+        color: var(--primary);
+    }
+    
+    .status-used {
+        background-color: rgba(32, 201, 151, 0.1);
+        color: var(--success);
+    }
+    
+    .status-expired {
+        background-color: rgba(108, 117, 125, 0.1);
+        color: var(--secondary);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--secondary);
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        opacity: 0.5;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state h4 {
+        color: var(--dark);
+        margin-bottom: 0.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .code-card {
+            padding: 1.25rem;
+        }
+        
+        .code-value {
+            font-size: 1.1rem;
+            padding: 0.6rem 1rem;
+        }
+        
+        .code-actions {
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .code-actions .btn {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4 py-lg-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-10 col-xl-8">
+            <div class="card overflow-hidden mb-4">
+                <div class="card-header text-center py-4">
+                    <h1 class="h3 mb-3"><i class="bi bi-check-circle-fill me-2"></i>Codes générés avec succès</h1>
+                    <p class="lead mb-0 opacity-75">Voici les codes de vérification que vous venez de créer</p>
+                </div>
+                <div class="card-body p-4 text-center">
+                    <div class="d-flex flex-wrap justify-content-center gap-3 mt-3">
+                        <a href="{% url 'payments:generate_verification_codes' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-arrow-left me-2"></i>Générer d'autres codes
+                        </a>
+                        <a href="{% url 'payments:code_dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-grid me-2"></i>Tableau de bord
+                        </a>
+                        <button id="download-csv" class="btn btn-success">
+                            <i class="bi bi-file-earmark-spreadsheet me-2"></i>Exporter en CSV
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                {% if codes %}
+                    {% for code in codes %}
+                    <div class="col-12 mb-3">
+                        <div class="code-card {{ code.status }}">
+                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3">
+                                <div class="d-flex align-items-center mb-2 mb-md-0">
+                                    <span class="code-value" onclick="copyToClipboard('{{ code.code }}')" title="Cliquez pour copier">
+                                        <i class="bi bi-key-fill"></i>
+                                        <span class="d-none d-sm-inline">{{ code.code }}</span>
+                                        <span class="d-inline d-sm-none">{{ code.code|slice:":8" }}...</span>
+                                        <i class="bi bi-clipboard ms-2"></i>
+                                    </span>
+                                </div>
+                                <span class="status-badge status-{{ code.status }}">
+                                    {% if code.status == 'pending' %}
+                                        <i class="bi bi-hourglass-split me-1"></i> En attente
+                                    {% elif code.status == 'used' %}
+                                        <i class="bi bi-check-circle me-1"></i> Utilisé
+                                    {% else %}
+                                        <i class="bi bi-x-circle me-1"></i> Expiré
+                                    {% endif %}
+                                </span>
+                            </div>
+                            
+                            <div class="code-meta">
+                                <div class="meta-item" title="Date de création">
+                                    <i class="bi bi-calendar3"></i>
+                                    <span>Créé le {{ code.created_at|date:"d/m/Y" }}</span>
+                                </div>
+                                <div class="meta-item" title="Date d'expiration">
+                                    <i class="bi bi-clock"></i>
+                                    <span>Expire le {{ code.expires_at|date:"d/m/Y" }}</span>
+                                </div>
+                                {% if code.used_by %}
+                                <div class="meta-item" title="Utilisé par">
+                                    <i class="bi bi-person-check"></i>
+                                    <span>{{ code.used_by.get_full_name|default:code.used_by.username }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="code-actions">
+                                <button class="btn btn-sm btn-primary" onclick="copyToClipboard('{{ code.code }}')">
+                                    <i class="bi bi-clipboard"></i> Copier
+                                </button>
+                                {% if code.status == 'pending' %}
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="markAsUsed('{{ code.id }}')">
+                                        <i class="bi bi-check-circle"></i> Marquer comme utilisé
+                                    </button>
+                                {% endif %}
+                                <button class="btn btn-sm btn-outline-secondary" onclick="showCodeDetails('{{ code.id }}')">
+                                    <i class="bi bi-info-circle"></i> Détails
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="col-12">
+                        <div class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            <h4>Aucun code trouvé</h4>
+                            <p class="text-muted">Commencez par générer votre premier code de paiement.</p>
+                            <a href="{% url 'payments:generate_verification_codes' %}" class="btn btn-primary mt-3">
+                                <i class="bi bi-plus-circle me-2"></i>Générer un code
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="text-center mt-5">
+                <a href="{% url 'payments:code_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-grid"></i> Voir tous les codes
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour les détails du code -->
+<div class="modal fade" id="codeDetailsModal" tabindex="-1" aria-labelledby="codeDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="codeDetailsModalLabel">Détails du code</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body" id="codeDetailsContent">
+                <!-- Le contenu sera chargé dynamiquement -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                <button type="button" class="btn btn-primary" id="copyCodeBtn">
+                    <i class="bi bi-clipboard me-2"></i>Copier le code
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast de notification -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="toast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <span id="toast-message">Action effectuée avec succès</span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Initialisation des tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Fonction pour afficher les détails d'un code
+    function showCodeDetails(codeId) {
+        // Ici, vous pouvez ajouter une requête AJAX pour récupérer plus de détails si nécessaire
+        // Pour l'instant, on affiche juste une alerte avec l'ID
+        const modal = new bootstrap.Modal(document.getElementById('codeDetailsModal'));
+        const modalElement = document.getElementById('codeDetailsModal');
+        const codeElement = document.querySelector(`.code-card[data-code-id="${codeId}"]`);
+        
+        if (codeElement) {
+            const code = codeElement.querySelector('.code-value').textContent.trim();
+            const status = codeElement.querySelector('.status-badge').textContent.trim();
+            
+            document.getElementById('codeDetailsContent').innerHTML = `
+                <div class="mb-3">
+                    <h6 class="text-muted mb-2">Code de vérification</h6>
+                    <div class="p-3 bg-light rounded-2">
+                        <code class="h4">${code}</code>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <h6 class="text-muted mb-2">Statut</h6>
+                        <div>${status}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <h6 class="text-muted mb-2">Date de création</h6>
+                        <div>${codeElement.querySelector('[title="Date de création"] span').textContent}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <h6 class="text-muted mb-2">Date d'expiration</h6>
+                        <div>${codeElement.querySelector('[title="Date d\'expiration"] span').textContent}</div>
+                    </div>
+                </div>
+            `;
+            
+            // Mettre à jour le bouton de copie
+            const copyBtn = document.getElementById('copyCodeBtn');
+            copyBtn.onclick = function() {
+                copyToClipboard(code);
+            };
+            
+            modal.show();
+        }
+    }
+    
+    // Fonction pour copier du texte dans le presse-papier
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(function() {
+            showToast('Code copié dans le presse-papiers');
+        }, function() {
+            showToast('Impossible de copier le code', 'error');
+        });
+    }
+    
+    // Fonction pour afficher une notification toast
+    function showToast(message, type = 'success') {
+        const toastEl = document.getElementById('toast');
+        const toastMessage = document.getElementById('toast-message');
+        
+        // Mettre à jour le message
+        toastMessage.textContent = message;
+        
+        // Changer la couleur en fonction du type
+        if (type === 'error') {
+            toastEl.classList.remove('bg-success');
+            toastEl.classList.add('bg-danger');
+        } else {
+            toastEl.classList.remove('bg-danger');
+            toastEl.classList.add('bg-success');
+        }
+        
+        // Afficher le toast
+        const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+        toast.show();
+    }
+    
+    // Télécharger les codes au format CSV
+    document.getElementById('download-csv').addEventListener('click', function() {
+        let csvContent = 'Code,Date d\'expiration,Utilisations,Statut\n';
+        
+        // Sélectionner tous les codes de la page
+        document.querySelectorAll('.code-card').forEach(function(card) {
+            const code = card.querySelector('.code-value').textContent.trim();
+            const status = card.querySelector('.status-badge').textContent.trim();
+            const expiresAt = card.querySelector('[title="Date d\'expiration"] span').textContent;
+            let usedBy = 'Non utilisé';
+            
+            const usedByElement = card.querySelector('[title="Utilisé par"]');
+            if (usedByElement) {
+                usedBy = usedByElement.textContent.trim();
+            }
+            
+            csvContent += `"${code}","${expiresAt}","${usedBy}","${status}"\n`;
+        });
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'codes_verification_{{ now|date:"Y-m-d" }}.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showToast('Export CSV démarré');
+    });
+    
+    // Activer les tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+{% endblock %}

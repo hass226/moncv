@@ -1,0 +1,479 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load currency_tags %}
+
+{% block title %}Paiement Abonnement Premium - MYMEDAGA{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #4A6CF7;
+        --secondary-color: #6C757D;
+        --success-color: #28A745;
+        --warning-color: #FFC107;
+        --danger-color: #DC3545;
+        --light-color: #F8F9FA;
+        --dark-color: #343A40;
+        --border-radius: 12px;
+        --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        --transition: all 0.3s ease;
+    }
+
+    body {
+        background-color: #F5F7FF;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    .payment-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 1rem;
+    }
+
+    .payment-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        overflow: hidden;
+    }
+
+    .payment-header {
+        background: linear-gradient(135deg, #4A6CF7, #6C5BFF);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .payment-header h1 {
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .payment-header p {
+        opacity: 0.9;
+        margin-bottom: 0;
+    }
+
+    .payment-body {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .payment-summary {
+        flex: 1;
+        min-width: 300px;
+        padding: 2rem;
+        border-right: 1px solid #eee;
+    }
+
+    .payment-details {
+        flex: 1;
+        min-width: 300px;
+        padding: 2rem;
+        background-color: #F9FAFF;
+    }
+
+    .plan-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid #eee;
+        transition: var(--transition);
+    }
+
+    .plan-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    }
+
+    .plan-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--dark-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .plan-price {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin: 1rem 0;
+    }
+
+    .plan-duration {
+        color: var(--secondary-color);
+        font-size: 0.9rem;
+    }
+
+    .feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 1.5rem 0;
+    }
+
+    .feature-list li {
+        padding: 0.5rem 0;
+        padding-left: 2rem;
+        position: relative;
+        color: var(--secondary-color);
+    }
+
+    .feature-list li:before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: var(--success-color);
+        font-weight: bold;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--dark-color);
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid #ddd;
+        border-radius: var(--border-radius);
+        font-size: 1rem;
+        transition: var(--transition);
+    }
+
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(74, 108, 247, 0.25);
+        outline: none;
+    }
+
+    .btn-pay {
+        display: block;
+        width: 100%;
+        padding: 1rem;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: var(--border-radius);
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .btn-pay:hover {
+        background: #3a5bd9;
+        transform: translateY(-2px);
+    }
+
+    .btn-pay:active {
+        transform: translateY(0);
+    }
+
+    .payment-methods {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin: 1.5rem 0;
+    }
+
+    .payment-method {
+        flex: 1;
+        min-width: 120px;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: var(--border-radius);
+        text-align: center;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .payment-method:hover {
+        border-color: var(--primary-color);
+        background-color: rgba(74, 108, 247, 0.05);
+    }
+
+    .payment-method.active {
+        border-color: var(--primary-color);
+        background-color: rgba(74, 108, 247, 0.1);
+    }
+
+    .payment-method i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .secure-payment {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        color: var(--secondary-color);
+        font-size: 0.9rem;
+        margin-top: 1.5rem;
+    }
+
+    .secure-payment i {
+        color: var(--success-color);
+    }
+
+    @media (max-width: 768px) {
+        .payment-body {
+            flex-direction: column;
+        }
+
+        .payment-summary {
+            border-right: none;
+            border-bottom: 1px solid #eee;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Récupération des éléments du DOM
+    const paymentMethods = document.querySelectorAll('.payment-method');
+    const paymentMethodInput = document.getElementById('payment-method');
+    const paymentForm = document.getElementById('payment-form');
+    const phoneInput = document.getElementById('phone');
+    const payButton = document.getElementById('pay-button');
+    
+    // Fonction utilitaire pour afficher un message d'erreur
+    function showError(message) {
+        // Supprimer les anciens messages d'erreur
+        const existingAlerts = document.querySelectorAll('.alert.alert-danger');
+        existingAlerts.forEach(alert => alert.remove());
+        
+        // Créer et afficher le nouveau message d'erreur
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger mt-3';
+        alertDiv.innerHTML = `
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            ${message}
+        `;
+        
+        // Insérer avant le formulaire
+        paymentForm.parentNode.insertBefore(alertDiv, paymentForm);
+        
+        // Faire défiler jusqu'au message d'erreur
+        alertDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    
+    // Gestion de la sélection de la méthode de paiement
+    paymentMethods.forEach(method => {
+        method.addEventListener('click', function() {
+            // Retirer la classe active de toutes les méthodes
+            paymentMethods.forEach(m => m.classList.remove('active', 'border-primary'));
+            // Ajouter la classe active à la méthode sélectionnée
+            this.classList.add('active', 'border-primary');
+            // Mettre à jour la valeur du champ caché
+            const methodValue = this.getAttribute('data-method');
+            paymentMethodInput.value = methodValue;
+            // Mettre à jour l'interface utilisateur
+            updatePayButton();
+        });
+    });
+
+    // Gestion du numéro de téléphone
+    phoneInput.addEventListener('input', function() {
+        // Nettoyer le numéro (supprimer tout sauf les chiffres)
+        this.value = this.value.replace(/[^0-9]/g, '');
+        updatePayButton();
+    });
+
+    // Fonction pour mettre à jour l'état du bouton de paiement
+    function updatePayButton() {
+        const isPhoneValid = phoneInput.value.trim().length >= 8;
+        const isMethodSelected = paymentMethodInput.value !== '';
+        
+        if (isPhoneValid && isMethodSelected) {
+            payButton.disabled = false;
+            payButton.classList.remove('disabled');
+        } else {
+            payButton.disabled = true;
+            payButton.classList.add('disabled');
+        }
+    }
+
+    // Gestion de la soumission du formulaire
+    paymentForm.addEventListener('submit', function(e) {
+        // Empêcher la soumission par défaut
+        e.preventDefault();
+        
+        // Vérifier si une méthode de paiement est sélectionnée
+        if (!paymentMethodInput.value) {
+            showError('Veuillez sélectionner une méthode de paiement');
+            return false;
+        }
+        
+        // Vérifier si le numéro de téléphone est valide
+        if (phoneInput.value.trim().length < 8) {
+            showError('Veuillez entrer un numéro de téléphone valide (au moins 8 chiffres)');
+            return false;
+        }
+        
+        // Désactiver le bouton et afficher l'indicateur de chargement
+        const originalButtonText = payButton.innerHTML;
+        payButton.disabled = true;
+        payButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Traitement...';
+        
+        // Soumettre le formulaire après un court délai pour permettre l'UI de se mettre à jour
+        setTimeout(() => {
+            // Réactiver le bouton après 5 secondes au cas où la soumission échouerait silencieusement
+            const reenableButton = setTimeout(() => {
+                payButton.disabled = false;
+                payButton.innerHTML = originalButtonText;
+            }, 5000);
+            
+            // Soumettre le formulaire
+            this.submit();
+            
+            // Si on revient ici (soumission échouée), annuler le timeout
+            clearTimeout(reenableButton);
+        }, 100);
+        
+        return false;
+    });
+    
+    // Initialiser l'interface utilisateur
+    updatePayButton();
+});
+</script>
+{% endblock %}
+
+{% load humanize %}
+
+{% block content %}
+<div class="payment-container">
+    <div class="payment-card">
+        <div class="payment-header">
+            <h1><i class="bi bi-shield-check"></i> Abonnement Premium</h1>
+            <p>Profitez de tous les avantages de notre offre Premium</p>
+        </div>
+        
+        <div class="payment-body">
+            <!-- Message d'alerte d'indisponibilité du service de paiement -->
+            <div class="alert alert-warning" role="alert" style="margin: 0 2rem 2rem 2rem;">
+                <h5 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Service de paiement temporairement indisponible</h5>
+                <p>Notre système de paiement en ligne est actuellement en cours de maintenance. Veuillez nous contacter directement pour effectuer votre paiement :</p>
+                <p class="mb-0">
+                    <a href="https://wa.me/22601256984" class="btn btn-success me-2 mb-2">
+                        <i class="fab fa-whatsapp me-1"></i> WhatsApp
+                    </a>
+                    <a href="tel:+22601256984" class="btn btn-primary mb-2">
+                        <i class="fas fa-phone me-1"></i> Appeler le +226 01 25 69 84
+                    </a>
+                </p>
+            </div>
+            <div class="payment-summary">
+                <h2>Résumé de votre abonnement</h2>
+                <p class="text-muted">Veuillez vérifier les détails avant de procéder au paiement</p>
+                
+                <div class="plan-card">
+                    <div class="plan-name">Abonnement Premium</div>
+                    <div class="plan-price">{{ subscription.amount|floatformat:0|intcomma }} FCFA</div>
+                    <div class="plan-duration">Pour 6 mois</div>
+                    
+                    <ul class="feature-list">
+                        <li>Boutique certifiée avec badge officiel</li>
+                        <li>Visibilité accrue dans les résultats de recherche</li>
+                        <li>Statut prioritaire pour le support client</li>
+                        <li>Analyses détaillées des performances</li>
+                        <li>Promotions illimitées</li>
+                        <li>Paiements sécurisés</li>
+                    </ul>
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Renouvellement automatique après 6 mois
+                    </div>
+                </div>
+                
+                <div class="boutique-info">
+                    <h3>Votre boutique</h3>
+                    <p><strong>{{ subscription.store.name }}</strong></p>
+                    <p class="text-muted">Propriétaire: {{ subscription.store.owner.get_full_name|default:subscription.store.owner.username }}</p>
+                </div>
+            </div>
+            
+            <div class="payment-details">
+                <h2>Détails de paiement</h2>
+                <p class="text-muted">Sélectionnez votre méthode de paiement préférée</p>
+                
+                <form id="payment-form" method="post" action="{% url 'initiate_subscription_payment' subscription.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" id="payment-method" name="payment_method" value="">
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="phone">Numéro de téléphone</label>
+                        <div style="position: relative;">
+                            <span style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #666;">+</span>
+                            <input type="tel" 
+                                   id="phone" 
+                                   name="phone_number" 
+                                   class="form-control" 
+                                   style="padding-left: 30px;"
+                                   placeholder="Votre numéro avec l'indicatif"
+                                   required
+                                   pattern="[0-9]+"
+                                   minlength="8"
+                                   maxlength="15">
+                        </div>
+                        <small class="text-muted">Nous vous enverrons une confirmation par SMS</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Méthode de paiement</label>
+                        <div class="payment-methods">
+                            <div class="payment-method" data-method="orange_money">
+                                <i class="bi bi-phone"></i>
+                                <div>Orange Money</div>
+                            </div>
+                            <div class="payment-method" data-method="moov_money">
+                                <i class="bi bi-phone"></i>
+                                <div>Moov Money</div>
+                            </div>
+                            <div class="payment-method" data-method="card">
+                                <i class="bi bi-credit-card"></i>
+                                <div>Carte bancaire</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" id="pay-button" class="btn-pay disabled" disabled>
+                        <i class="bi bi-lock-fill"></i> Payer maintenant {{ subscription.amount|floatformat:0|intcomma }} FCFA
+                    </button>
+                    
+                    <div class="secure-payment">
+                        <i class="bi bi-shield-check"></i>
+                        <span>Paiement 100% sécurisé</span>
+                    </div>
+                </form>
+                
+                <div class="mt-4">
+                    <p class="small text-muted">
+                        <i class="bi bi-info-circle"></i> En cliquant sur "Payer maintenant", vous acceptez nos 
+                        <a href="#" class="text-primary">Conditions d'utilisation</a> et confirmez que vous avez lu notre 
+                        <a href="#" class="text-primary">Politique de confidentialité</a>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="text-center mt-4">
+        <p class="text-muted">
+            <i class="bi bi-headset"></i> Besoin d'aide ? 
+            <a href="#" class="text-primary">Contactez notre support</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

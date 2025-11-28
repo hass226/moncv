@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Créer un Live - MYMEDAGA{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-lg" style="border-radius: 20px;">
+                <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #E63946, #FF6B35); border: none;">
+                    <h4 class="mb-0"><i class="bi bi-camera-video me-2"></i>Créer un Live Stream</h4>
+                </div>
+                <div class="card-body p-5">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Titre du live *</label>
+                            <input type="text" name="title" class="form-control rounded-pill" required placeholder="Ex: Vente flash de vêtements">
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Description</label>
+                            <textarea name="description" class="form-control" rows="4" style="border-radius: 15px;" placeholder="Décrivez votre live..."></textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Date et heure (optionnel)</label>
+                            <input type="datetime-local" name="scheduled_at" class="form-control rounded-pill">
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Miniature</label>
+                            <input type="file" name="thumbnail" class="form-control rounded-pill" accept="image/*">
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger btn-lg rounded-pill">
+                                <i class="bi bi-camera-video-fill me-2"></i>CRÉER LE LIVE
+                            </button>
+                            <a href="{% url 'live_streams_list' %}" class="btn btn-outline-secondary rounded-pill">Annuler</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

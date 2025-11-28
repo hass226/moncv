@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Classrooms - MYMEDAGA{% endblock %}
+
+{% block extra_css %}
+<style>
+    .classrooms-hero-title {
+        background: linear-gradient(135deg, #6366f1, #ec4899);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .classroom-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        transform: translateY(12px);
+        opacity: 0;
+        transition: transform 0.4s ease, box-shadow 0.35s ease, opacity 0.4s ease;
+    }
+
+    .classroom-card.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .classroom-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3) !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-3 fw-bold mb-3 classrooms-hero-title">
+            🎓 CLASSROOMS
+        </h1>
+        <p class="lead text-white">Étudiez ensemble !</p>
+        {% if user.is_authenticated %}
+        <a href="{% url 'create_classroom' %}" class="btn btn-lg btn-primary rounded-pill px-5 mt-3 shadow-lg">
+            <i class="bi bi-plus-circle me-2"></i>CRÉER UNE CLASSE
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- My Classrooms -->
+    {% if my_classrooms %}
+    <div class="mb-5">
+        <h4 class="text-white mb-4"><i class="bi bi-bookmark-fill text-warning me-2"></i>Mes Classes</h4>
+        <div class="row g-4">
+            {% for classroom in my_classrooms %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 shadow-lg h-100 classroom-card" style="border-radius: 20px;">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="fw-bold mb-0">{{ classroom.name }}</h5>
+                            <span class="badge bg-primary">{{ classroom.members_count }} membres</span>
+                        </div>
+                        {% if classroom.course_code %}
+                        <p class="text-muted small mb-2"><i class="bi bi-code me-1"></i>{{ classroom.course_code }}</p>
+                        {% endif %}
+                        {% if classroom.university %}
+                        <p class="text-muted small mb-3"><i class="bi bi-mortarboard me-1"></i>{{ classroom.university }}</p>
+                        {% endif %}
+                        <p class="text-muted small mb-3">{{ classroom.description|truncatewords:15 }}</p>
+                        <a href="{% url 'classroom_detail' classroom.id %}" class="btn btn-primary w-100 rounded-pill">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Rejoindre
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Public Classrooms -->
+    {% if public_classrooms %}
+    <div>
+        <h4 class="text-white mb-4">Classes Publiques</h4>
+        <div class="row g-4">
+            {% for classroom in public_classrooms %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 shadow-lg h-100 classroom-card" style="border-radius: 20px;">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="fw-bold mb-0">{{ classroom.name }}</h5>
+                            <span class="badge bg-success">Public</span>
+                        </div>
+                        {% if classroom.course_code %}
+                        <p class="text-muted small mb-2"><i class="bi bi-code me-1"></i>{{ classroom.course_code }}</p>
+                        {% endif %}
+                        <p class="text-muted small mb-3">{{ classroom.description|truncatewords:15 }}</p>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'classroom_detail' classroom.id %}" class="btn btn-primary flex-grow-1 rounded-pill">
+                                <i class="bi bi-eye me-2"></i>Voir
+                            </a>
+                            {% if user.is_authenticated %}
+                            <button onclick="joinClassroom({{ classroom.id }})" class="btn btn-success rounded-pill">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if not my_classrooms and not public_classrooms %}
+    <div class="text-center py-5">
+        <i class="bi bi-book text-white" style="font-size: 5rem; opacity: 0.5;"></i>
+        <h3 class="text-white mt-3">Aucune classe disponible</h3>
+        <p class="text-white-50">Créez la première classe !</p>
+    </div>
+    {% endif %}
+{% block extra_js %}
+<script>
+function joinClassroom(classroomId) {
+    const inviteCode = prompt('Code d\'invitation (laissez vide si public):');
+    fetch(`/classrooms/${classroomId}/join/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({invite_code: inviteCode || ''})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Erreur: ' + (data.error || 'Impossible de rejoindre'));
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const cards = document.querySelectorAll('.classroom-card');
+
+    if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries, obs) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    obs.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.18 });
+
+        cards.forEach(card => observer.observe(card));
+    } else {
+        cards.forEach(card => card.classList.add('visible'));
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}
+

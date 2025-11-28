@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block title %}Hall of Fame - MYMEDAGA{% endblock %}
+
+{% block content %}
+<div class="hero-section mb-4 fade-section" style="position: relative; overflow: hidden;">
+    <div class="hero-particles" id="hof-hero-particles" style="position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:0;"></div>
+    <div class="hero-content text-center" style="position: relative; z-index: 1;">
+        <h1 class="display-5" style="font-family: 'Orbitron', sans-serif;">
+            Hall of Fame des vendeurs
+        </h1>
+        <p style="color: rgba(255,255,255,0.85);" class="mt-2">
+            Les boutiques qui inspirent la prochaine génération de vendeurs en ligne.
+        </p>
+        </div>
+</div>
+</div>
+
+<div class="row g-4 fade-section">
+    {% for item in stores_with_stats %}
+    {% with store=item.store %}
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="card product-card h-100 card-tilt" style="position: relative;">
+            {% if forloop.counter == 1 %}
+            <span class="featured-badge" style="position: absolute; top: 10px; left: 10px;">
+                🏆 #1 de la semaine
+            </span>
+            {% elif forloop.counter <= 3 %}
+            <span class="featured-badge" style="position: absolute; top: 10px; left: 10px;">
+                ⭐ Top {{ forloop.counter }}
+            </span>
+            {% endif %}
+            {% if store.is_verified %}
+            <span class="verified-badge" style="position: absolute; top: 10px; right: 10px;">
+                Vérifiée
+            </span>
+            {% endif %}
+            <div class="card-body d-flex flex-column text-center">
+                {% if store.logo %}
+                    <img src="{{ store.logo.url }}" alt="{{ store.name }}" class="store-logo mb-3" style="width: 80px; height: 80px;">
+                {% else %}
+                    <div class="store-logo bg-secondary d-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="bi bi-shop text-white" style="font-size: 2rem;"></i>
+                    </div>
+                {% endif %}
+                <h5 class="card-title">{{ store.name }}</h5>
+                <p class="text-muted small mb-3">{{ store.description|truncatewords:15 }}</p>
+                <div class="d-flex justify-content-center gap-3 mb-3 flex-wrap">
+                    <small class="text-muted">
+                        <i class="bi bi-people"></i> {{ item.followers }} followers
+                    </small>
+                    <small class="text-muted">
+                        <i class="bi bi-eye"></i> {{ item.total_views }} vues
+                    </small>
+                    <small class="text-muted">
+                        <i class="bi bi-heart"></i> {{ item.total_likes }} likes
+                    </small>
+                </div>
+                <div class="mt-auto fade-section">
+                    <a href="{% url 'store_detail' store.id %}" class="btn btn-outline-primary btn-sm btn-animated">
+                        Voir la boutique
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endwith %}
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info text-center" style="background: rgba(255,255,255,0.95); border-radius: 20px; border: none; padding: 40px;">
+            <i class="bi bi-info-circle" style="font-size: 3rem; color: var(--primary-orange);"></i>
+            <h4 style="margin-top: 20px; color: var(--text-dark);">Aucune boutique à afficher pour le moment</h4>
+            <p style="color: var(--text-dark);">Revenez bientôt pour découvrir les boutiques les plus performantes.</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const container = document.getElementById('hof-hero-particles');
+    if (!container) return;
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    container.appendChild(canvas);
+
+    const particles = [];
+    const PARTICLE_COUNT = 35;
+
+    const resizeCanvas = () => {
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+    };
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+        particles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            r: 1 + Math.random() * 3,
+            dx: -0.25 + Math.random() * 0.5,
+            dy: -0.25 + Math.random() * 0.5,
+            o: 0.3 + Math.random() * 0.5
+        });
+    }
+
+    const animateParticles = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+            p.x += p.dx;
+            p.y += p.dy;
+
+            if (p.x < 0) p.x = canvas.width;
+            if (p.x > canvas.width) p.x = 0;
+            if (p.y < 0) p.y = canvas.height;
+            if (p.y > canvas.height) p.y = 0;
+
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(247, 184, 1, ${p.o.toFixed(2)})`;
+            ctx.fill();
+        });
+        requestAnimationFrame(animateParticles);
+    };
+
+    animateParticles();
+});
+</script>
+{% endblock %}
+{% endblock %}

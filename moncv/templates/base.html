@@ -1,0 +1,889 @@
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'fr' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#FF6B35">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="HandheldFriendly" content="true">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <!-- Primary Meta Tags -->
+    <title>{% block title %}MYMEDAGA - Là où les jeunes deviennent vendeurs{% endblock %}</title>
+    <meta name="title" content="{% block meta_title %}MYMEDAGA - Plateforme e-commerce pour jeunes entrepreneurs africains{% endblock %}">
+    <meta name="description" content="{% block meta_description %}MYMEDAGA est la plateforme e-commerce moderne pour les jeunes entrepreneurs africains. Créez votre boutique, vendez vos produits, faites du live commerce, trouvez des jobs étudiants et étudiez ensemble.{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}e-commerce, boutique en ligne, vente en ligne, jeunes entrepreneurs, Afrique, commerce électronique, live commerce, jobs étudiants, marketplace, vente produits, WhatsApp commerce{% endblock %}">
+    <meta name="author" content="MYMEDAGA">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="language" content="{{ LANGUAGE_CODE|default:'fr' }}">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta name="revisit-after" content="7 days">
+    <meta name="distribution" content="global">
+    <meta name="rating" content="general">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{% block og_url %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}MYMEDAGA - Plateforme e-commerce pour jeunes entrepreneurs africains{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Créez votre boutique, vendez vos produits, faites du live commerce et trouvez des jobs étudiants sur MYMEDAGA.{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/logo.webp' %}{% endblock %}">
+    <meta property="og:site_name" content="MYMEDAGA">
+    <meta property="og:locale" content="{% if LANGUAGE_CODE == 'en' %}en_US{% else %}fr_FR{% endif %}">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{% block twitter_url %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endblock %}">
+    <meta name="twitter:title" content="{% block twitter_title %}MYMEDAGA - Plateforme e-commerce pour jeunes entrepreneurs{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Créez votre boutique, vendez vos produits et trouvez des jobs étudiants sur MYMEDAGA.{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/logo.webp' %}{% endblock %}">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endblock %}">
+    
+    <!-- Alternate Languages -->
+    <link rel="alternate" hreflang="fr" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
+    <link rel="alternate" hreflang="en" href="{{ request.scheme }}://{{ request.get_host }}/en{{ request.path }}">
+    <link rel="alternate" hreflang="x-default" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/webp" href="{% static 'img/icon.webp' %}">
+    <link rel="icon" type="image/png" href="{% static 'img/icon.jpg' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'img/icon.jpg' %}">
+    
+    <!-- Preconnect for Performance -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Stylesheets -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "MYMEDAGA",
+        "url": "{{ request.scheme }}://{{ request.get_host }}",
+        "description": "Plateforme e-commerce moderne pour jeunes entrepreneurs africains",
+        "inLanguage": "fr-FR",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": "{{ request.scheme }}://{{ request.get_host }}/search?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+        }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "MYMEDAGA",
+        "url": "{{ request.scheme }}://{{ request.get_host }}",
+        "logo": "{{ request.scheme }}://{{ request.get_host }}{% static 'img/logo.webp' %}",
+        "sameAs": [
+            "https://www.facebook.com/mymedaga",
+            "https://www.instagram.com/mymedaga",
+            "https://twitter.com/mymedaga"
+        ]
+    }
+    </script>
+    {% block structured_data %}{% endblock %}
+    <style>
+        /* Styles de base pour le responsive */
+        html {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Empêcher le zoom automatique sur les champs de formulaire sur iOS */
+        @media screen and (-webkit-min-device-pixel-ratio:0) {
+            input, select, textarea {
+                font-size: 16px !important;
+            }
+        }
+        
+        :root {
+            --primary-orange: #FF6B35;
+            --primary-yellow: #F7B801;
+            --primary-green: #00C896;
+            --primary-red: #E63946;
+            --primary-purple: #7209B7;
+            --dark-bg: #0A0E27;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-dark: #1A1A2E;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            color: var(--text-dark);
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .navbar {
+            background: rgba(10, 14, 39, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border-bottom: 2px solid var(--primary-yellow);
+            padding: 1rem 0;
+        }
+
+        .navbar-brand {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 1.9rem;
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 12px rgba(15, 23, 42, 0.6);
+            animation: brandPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes brandPulse {
+            0%, 100% { text-shadow: 0 0 10px rgba(15, 23, 42, 0.5); }
+            50% { text-shadow: 0 0 22px rgba(15, 23, 42, 0.9); }
+        }
+
+        .navbar-brand:hover {
+            transform: translateY(-1px) scale(1.03);
+            transition: transform 0.25s ease;
+        }
+
+        .navbar .tagline {
+            font-size: 0.7rem;
+            color: var(--primary-yellow);
+            font-weight: 300;
+            margin-left: 10px;
+            letter-spacing: 1px;
+        }
+
+        .nav-link {
+            color: white !important;
+            font-weight: 500;
+            margin: 0 10px;
+            padding: 8px 15px !important;
+            border-radius: 20px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            background: linear-gradient(135deg, var(--primary-orange), var(--primary-red));
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 53, 0.4);
+        }
+
+        .product-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: none;
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .product-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-yellow), var(--primary-orange), var(--primary-red));
+            transform: scaleX(0);
+            transition: transform 0.4s;
+        }
+
+        .product-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .product-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .product-image {
+            height: 280px;
+            object-fit: cover;
+            width: 100%;
+            transition: transform 0.6s ease-out;
+        }
+
+        .product-card:hover .product-image {
+            transform: scale(1.06);
+        }
+
+        .whatsapp-btn {
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(37, 211, 102, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .whatsapp-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .whatsapp-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .whatsapp-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(37, 211, 102, 0.6);
+            color: white;
+        }
+
+        .whatsapp-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .store-logo {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 4px solid var(--primary-yellow);
+            box-shadow: 0 10px 30px rgba(247, 184, 1, 0.4);
+            transition: transform 0.3s;
+        }
+
+        .store-logo:hover {
+            transform: rotate(360deg) scale(1.1);
+        }
+
+        footer {
+            background: rgba(10, 14, 39, 0.95);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 30px 0;
+            margin-top: 50px;
+            border-top: 2px solid var(--primary-yellow);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-orange), var(--primary-red));
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(255, 107, 53, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.6);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--primary-green), #00A878);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 200, 150, 0.4);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 200, 150, 0.6);
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-control {
+            border-radius: 15px;
+            border: 2px solid #e0e0e0;
+            padding: 12px 20px;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-orange);
+            box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.25);
+        }
+
+        h1, h2, h3, h4, h5 {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+        }
+
+        .display-4, .display-5 {
+            background: linear-gradient(135deg, var(--primary-yellow), var(--primary-orange));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Animation pour les notifications de localisation */
+        .location-loading {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            background: linear-gradient(135deg, var(--primary-green), #00A878);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 200, 150, 0.4);
+            animation: slideInRight 0.3s ease;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Amélioration des boutons de commande */
+        .whatsapp-btn.loading {
+            opacity: 0.7;
+            cursor: wait;
+            pointer-events: none;
+        }
+
+        .whatsapp-btn.loading::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin-left: -10px;
+            margin-top: -10px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .fade-section {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .fade-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .btn-animated {
+            position: relative;
+            overflow: hidden;
+            transform: translateY(0);
+            transition: transform 0.2s ease, box-shadow 0.25s ease;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+        }
+
+        .btn-animated::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -50%;
+            width: 40%;
+            height: 100%;
+            background: linear-gradient(120deg, rgba(255,255,255,0.4), transparent);
+            transform: skewX(-20deg);
+            opacity: 0;
+            transition: transform 0.5s, opacity 0.5s;
+        }
+
+        .btn-animated:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 35px rgba(0,0,0,0.35);
+        }
+
+        .btn-animated:hover::after {
+            opacity: 1;
+            transform: translateX(250%) skewX(-20deg);
+        }
+
+        .card-tilt {
+            transform-style: preserve-3d;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            will-change: transform;
+        }
+
+        .card-tilt.tilt-active {
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+        }
+
+        .ad-slot {
+            border-radius: 16px;
+            transform: scale(0.97);
+            box-shadow: 0 0 0 rgba(250, 204, 21, 0);
+            transition: transform 0.35s ease, box-shadow 0.35s ease;
+        }
+
+        .ad-slot.ad-slot-visible {
+            transform: scale(1);
+            box-shadow: 0 0 22px rgba(250, 204, 21, 0.45);
+        }
+
+        @media (max-width: 768px) {
+            .navbar-brand {
+                font-weight: 700;
+                color: white;
+                font-size: 1.1rem;
+                white-space: normal;
+                line-height: 1.2;
+                max-width: 70%;
+            }
+            
+            .tagline {
+                display: block;
+                font-size: 0.7rem;
+                font-weight: 400;
+                opacity: 0.9;
+            }
+            
+            .navbar-brand {
+                font-size: 1rem;
+                max-width: 60%;
+            }
+            
+            .tagline {
+                font-size: 0.6rem;
+            }
+            
+            .container {
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+            
+            /* Amélioration des menus déroulants sur mobile */
+            .dropdown-menu {
+                position: absolute !important;
+                width: 90%;
+                left: 5% !important;
+                right: 5% !important;
+            }
+            
+            /* Espacement amélioré pour les boutons sur mobile */
+            .btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+            }
+            
+            /* Ajustement des marges pour le contenu principal */
+            body {
+                padding-bottom: 80px; /* Pour le bouton flottant */
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar .tagline {
+                display: none;
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+
+    {# Google AdSense global script - remplace CA-PUB-XXXX par ton vrai ID client #}
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=CA-PUB-XXXX"
+            crossorigin="anonymous"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
+                <picture>
+                    <source srcset="{% static 'img/logo.webp' %}" type="image/webp">
+                    <img src="{% static 'img/logo.jpg' %}" alt="MYMEDAGA" style="height:42px; margin-right:10px; object-fit:contain;">
+                </picture>
+                <div class="d-flex flex-column">
+                    <span class="d-none d-md-inline" style="font-family: 'Orbitron', sans-serif; font-weight:900; font-size:1.1rem; letter-spacing:2px;">MYMEDAGA</span>
+                    <span class="tagline">Là où les jeunes deviennent vendeurs</span>
+                </div>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <!-- Catégorie 1 : Découvrir -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="discoverDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-compass"></i> Découvrir
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="discoverDropdown">
+                            <li><a class="dropdown-item" href="{% url 'home' %}"><i class="bi bi-house me-2"></i>Accueil</a></li>
+                            <li><a class="dropdown-item" href="{% url 'jobs_list' %}"><i class="bi bi-briefcase me-2"></i>Jobs</a></li>
+                            <li><a class="dropdown-item" href="{% url 'classrooms_list' %}"><i class="bi bi-book me-2"></i>Classroom</a></li>
+                            {% if user.is_authenticated %}
+                                <li><a class="dropdown-item" href="{% url 'search' %}"><i class="bi bi-search me-2"></i>Recherche</a></li>
+                            {% endif %}
+                        </ul>
+                    </li>
+
+                    {% if user.is_authenticated %}
+                        <!-- Catégorie 2 : Boutique -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="storeDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-shop"></i> Boutique
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="storeDropdown">
+                                <li><a class="dropdown-item" href="{% url 'dashboard' %}"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+                                {% if user.store %}
+                                    <li><a class="dropdown-item" href="{% url 'store_detail' user.store.id %}"><i class="bi bi-eye me-2"></i>Voir ma boutique</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'edit_store' %}"><i class="bi bi-pencil me-2"></i>Modifier la boutique</a></li>
+                                {% else %}
+                                    <li><a class="dropdown-item" href="{% url 'create_store' %}"><i class="bi bi-plus-circle me-2"></i>Créer une boutique</a></li>
+                                {% endif %}
+                            </ul>
+                        </li>
+
+                        <!-- Catégorie 3 : Mon espace -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="accountDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person"></i> Mon espace
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="accountDropdown">
+                                <li><a class="dropdown-item" href="{% url 'student_profile' %}"><i class="bi bi-person-circle me-2"></i>Mon Profil</a></li>
+                                <li><a class="dropdown-item" href="{% url 'my_favorites' %}"><i class="bi bi-bookmark-heart me-2"></i>Favoris</a></li>
+                                <li><a class="dropdown-item" href="{% url 'notifications' %}"><i class="bi bi-bell me-2"></i>Notifications</a></li>
+                                <li><a class="dropdown-item" href="{% url 'jobs_list' %}"><i class="bi bi-briefcase me-2"></i>Jobs</a></li>
+                                <li><a class="dropdown-item" href="{% url 'my_jobs' %}"><i class="bi bi-briefcase-fill me-2"></i>Mes jobs</a></li>
+                                <li><a class="dropdown-item" href="{% url 'ai_assistant' %}"><i class="bi bi-magic me-2"></i>Assistant IA</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form method="post" action="{% url 'logout' %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="dropdown-item" style="background: none; border: none; width: 100%; text-align: left;">
+                                            <i class="bi bi-box-arrow-right me-2"></i>Déconnexion
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">
+                                <i class="bi bi-box-arrow-in-right"></i> Connexion
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'register' %}">
+                                <i class="bi bi-person-plus"></i> Inscription
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container-fluid px-3 px-md-4 py-3 py-md-4" style="margin-top: 80px !important; max-width: 100%; overflow-x: hidden;">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert" style="border-radius: 15px; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Floating Action Button pour mobile -->
+    <div class="d-block d-lg-none" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+        <a href="{% url 'create_store' %}" class="btn btn-primary rounded-circle shadow-lg" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+            <i class="bi bi-plus-lg fs-4"></i>
+        </a>
+    </div>
+
+    <footer class="text-center">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <h3 style="font-family: 'Orbitron', sans-serif; color: var(--primary-yellow);">MYMEDAGA</h3>
+                    <p style="color: rgba(255,255,255,0.8);">Là où les jeunes deviennent vendeurs</p>
+                </div>
+            </div>
+            <p style="color: rgba(255,255,255,0.6);">&copy; 2024 MYMEDAGA. Tous droits réservés. Propulsé par la jeunesse africaine.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% load static %}
+    <script src="{% static 'js/phone-utils.js' %}"></script>
+    <script src="{% static 'js/currency-converter.js' %}"></script>
+    <script src="{% static 'js/geolocation.js' %}"></script>
+    
+    <!-- Sélecteur de langue et devise -->
+    <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; background: rgba(255,255,255,0.95); padding: 15px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.2);">
+        <div style="margin-bottom: 10px;">
+            <label style="font-weight: 600; display: block; margin-bottom: 5px;">🌍 Langue / Language</label>
+            <select id="language-selector" class="form-control" style="font-size: 0.9rem;">
+                <option value="fr" {% if LANGUAGE_CODE == 'fr' %}selected{% endif %}>Français</option>
+                <option value="en" {% if LANGUAGE_CODE == 'en' %}selected{% endif %}>English</option>
+            </select>
+        </div>
+        <div>
+            <label style="font-weight: 600; display: block; margin-bottom: 5px;">💰 Devise / Currency</label>
+            <select id="currency-selector" class="form-control" style="font-size: 0.9rem;">
+                <option value="EUR" {% if current_currency == 'EUR' %}selected{% endif %}>EUR (€)</option>
+                <option value="XOF" {% if current_currency == 'XOF' %}selected{% endif %}>XOF (CFA)</option>
+                <option value="XAF" {% if current_currency == 'XAF' %}selected{% endif %}>XAF (FCFA)</option>
+                <option value="NGN" {% if current_currency == 'NGN' %}selected{% endif %}>NGN (₦)</option>
+                <option value="GHS" {% if current_currency == 'GHS' %}selected{% endif %}>GHS (₵)</option>
+                <option value="KES" {% if current_currency == 'KES' %}selected{% endif %}>KES (KSh)</option>
+                <option value="ZAR" {% if current_currency == 'ZAR' %}selected{% endif %}>ZAR (R)</option>
+                <option value="EGP" {% if current_currency == 'EGP' %}selected{% endif %}>EGP (E£)</option>
+                <option value="MAD" {% if current_currency == 'MAD' %}selected{% endif %}>MAD (DH)</option>
+                <option value="USD" {% if current_currency == 'USD' %}selected{% endif %}>USD ($)</option>
+                <option value="GBP" {% if current_currency == 'GBP' %}selected{% endif %}>GBP (£)</option>
+            </select>
+        </div>
+    </div>
+    
+    <script>
+    // Récupérer le token CSRF depuis le cookie (recommandation Django)
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const CSRF_TOKEN = getCookie('csrftoken');
+
+    // Changer la langue
+    document.getElementById('language-selector').addEventListener('change', function() {
+        const lang = this.value;
+        // Si pas de cookie CSRF, ne pas envoyer la requête pour éviter les 403 bruit
+        if (!CSRF_TOKEN) {
+            console.warn('CSRF cookie manquant, changement de langue ignoré.');
+            return;
+        }
+        fetch('/set-language/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': CSRF_TOKEN
+            },
+            body: JSON.stringify({language: lang})
+        }).then(() => location.reload());
+    });
+    
+    // Changer la devise
+    document.getElementById('currency-selector').addEventListener('change', function() {
+        const currency = this.value;
+        localStorage.setItem('preferredCurrency', currency);
+        updateAllPrices(currency);
+        // Sauvegarder dans la session Django (seulement si on a un CSRF valide)
+        if (!CSRF_TOKEN) {
+            console.warn('CSRF cookie manquant, set-currency ignoré côté serveur.');
+            return;
+        }
+        fetch('/set-currency/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': CSRF_TOKEN
+            },
+            body: JSON.stringify({currency: currency})
+        });
+    });
+    
+    // Charger la devise préférée (priorité au localStorage, sinon valeur de la session / serveur)
+    const serverCurrency = '{{ current_currency|default:"EUR" }}';
+    const preferredCurrency = localStorage.getItem('preferredCurrency') || serverCurrency || 'EUR';
+    document.getElementById('currency-selector').value = preferredCurrency;
+    
+        function updateAllPrices(currency) {
+        if (typeof currencyConverter === 'undefined') return;
+        
+        document.querySelectorAll('.product-price[data-amount][data-currency]').forEach(el => {
+            const amount = parseFloat(el.dataset.amount);
+            const fromCurrency = el.dataset.currency || 'EUR';
+            if (isNaN(amount)) return;
+
+            const converted = currencyConverter.convert(amount, fromCurrency, currency);
+            const formatted = currencyConverter.format(converted, currency);
+            el.innerHTML = formatted;
+        });
+    }
+    
+    // Mettre à jour les prix au chargement
+    if (typeof currencyConverter !== 'undefined') {
+        updateAllPrices(preferredCurrency);
+    }
+    </script>
+
+    <script>
+    // Effet de mouvement doux au scroll pour les visuels (produits, boutiques)
+    // et révélation progressive des sections .fade-section
+    document.addEventListener('DOMContentLoaded', function () {
+        const movingEls = Array.from(document.querySelectorAll('.product-image, .store-logo, .store-logo-mini'));
+        const maxOffset = 20; // déplacement maximal en pixels (effet visible mais plus doux)
+
+        const updatePositions = () => {
+            const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+            movingEls.forEach(img => {
+                const rect = img.getBoundingClientRect();
+                const center = rect.top + rect.height / 2;
+                const ratio = (center - viewportHeight / 2) / viewportHeight; // -0.5 à 0.5 environ
+                const offset = -ratio * maxOffset;
+                img.style.transform = `translateY(${offset.toFixed(1)}px)`;
+            });
+        };
+
+        if (movingEls.length) {
+            let ticking = false;
+            const onScroll = () => {
+                if (!ticking) {
+                    window.requestAnimationFrame(function () {
+                        updatePositions();
+                        ticking = false;
+                    });
+                    ticking = true;
+                }
+            };
+
+            window.addEventListener('scroll', onScroll, { passive: true });
+            updatePositions();
+        }
+
+        const fadeSections = Array.from(document.querySelectorAll('.fade-section'));
+        if (fadeSections.length) {
+            if ('IntersectionObserver' in window) {
+                const sectionObserver = new IntersectionObserver((entries, obs) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('visible');
+                            obs.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.2 });
+
+                fadeSections.forEach(section => sectionObserver.observe(section));
+            } else {
+                fadeSections.forEach(section => section.classList.add('visible'));
+            }
+        }
+
+        const tiltCards = Array.from(document.querySelectorAll('.card-tilt'));
+        if (tiltCards.length && window.matchMedia && window.matchMedia('(pointer: fine)').matches) {
+            const maxTilt = 10;
+            tiltCards.forEach(card => {
+                card.addEventListener('mousemove', (event) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = event.clientX - rect.left;
+                    const y = event.clientY - rect.top;
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    const rotateX = ((y - centerY) / centerY) * -maxTilt;
+                    const rotateY = ((x - centerX) / centerX) * maxTilt;
+                    card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(1)}deg) rotateY(${rotateY.toFixed(1)}deg)`;
+                    card.classList.add('tilt-active');
+                });
+
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
+                    card.classList.remove('tilt-active');
+                });
+            });
+        }
+    });
+    </script>
+    
+    <style>
+    .fade-section {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.5s, transform 0.5s;
+    }
+    .fade-section.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .btn-animated {
+        transition: background-color 0.3s, color 0.3s;
+    }
+    .btn-animated:hover {
+        background-color: var(--primary-yellow);
+        color: #fff;
+    }
+    </style>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

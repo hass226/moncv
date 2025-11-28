@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes Promotions - MYMEDAGA{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-5">
+            <i class="bi bi-megaphone"></i> Mes Promotions
+        </h1>
+        <p class="lead">Gérez vos promotions actives et passées</p>
+    </div>
+</div>
+
+{% if promotions %}
+<div class="row g-4">
+    {% for promotion in promotions %}
+    <div class="col-md-6">
+        <div class="card" style="border-radius: 20px; overflow: hidden;">
+            <div class="card-header" style="background: linear-gradient(135deg, var(--primary-purple), #9D4EDD); color: white; border: none;">
+                <h5 class="mb-0">
+                    <i class="bi bi-star-fill"></i> {{ promotion.get_promotion_type_display }}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if promotion.product %}
+                <p><strong>Produit :</strong> {{ promotion.product.name }}</p>
+                {% endif %}
+                {% if promotion.store %}
+                <p><strong>Boutique :</strong> {{ promotion.store.name }}</p>
+                {% endif %}
+
+                <p><strong>Pack :</strong>
+                    {% if promotion.amount == 1000 %}
+                        Pack 1000 FCFA - 3 jours - ~500 personnes
+                    {% elif promotion.amount == 2000 %}
+                        Pack 2000 FCFA - 7 jours - ~1500 personnes
+                    {% elif promotion.amount == 3000 %}
+                        Pack 3000 FCFA - 14 jours - ~5000 personnes
+                    {% elif promotion.amount == 5000 %}
+                        Pack 5000 FCFA - 30 jours - ~10000 personnes
+                    {% else %}
+                        {{ promotion.amount }}
+                    {% endif %}
+                </p>
+                <p><strong>Méthode de paiement :</strong> {{ promotion.get_payment_method_display }}</p>
+                <p><strong>Statut :</strong> 
+                    {% if promotion.status == 'active' %}
+                        <span class="badge bg-success">Active</span>
+                    {% elif promotion.status == 'pending' %}
+                        <span class="badge bg-warning">En attente</span>
+                    {% elif promotion.status == 'expired' %}
+                        <span class="badge bg-secondary">Expirée</span>
+                    {% else %}
+                        <span class="badge bg-danger">{{ promotion.get_status_display }}</span>
+                    {% endif %}
+                </p>
+                <p><strong>Début :</strong> {{ promotion.starts_at|date:"d/m/Y H:i" }}</p>
+                <p><strong>Expire le :</strong> {{ promotion.expires_at|date:"d/m/Y H:i" }}</p>
+                {% if promotion.transaction_id %}
+                <p><strong>ID Transaction :</strong> <code>{{ promotion.transaction_id }}</code></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info text-center" style="background: rgba(255,255,255,0.95); border-radius: 20px; padding: 40px;">
+    <i class="bi bi-info-circle" style="font-size: 3rem; color: var(--primary-purple);"></i>
+    <h4 style="margin-top: 20px;">Aucune promotion</h4>
+    <p>Vous n'avez pas encore de promotion active.</p>
+    <a href="{% url 'promote' %}" class="btn btn-primary mt-3" style="background: linear-gradient(135deg, var(--primary-purple), #9D4EDD); border: none;">
+        <i class="bi bi-megaphone"></i> Créer une promotion
+    </a>
+</div>
+{% endif %}
+
+<div class="mt-4">
+    <a href="{% url 'dashboard' %}" class="btn btn-outline-primary">
+        <i class="bi bi-arrow-left"></i> Retour au dashboard
+    </a>
+    <a href="{% url 'promote' %}" class="btn btn-primary" style="background: linear-gradient(135deg, var(--primary-purple), #9D4EDD); border: none;">
+        <i class="bi bi-plus-circle"></i> Nouvelle promotion
+    </a>
+</div>
+{% endblock %}
+

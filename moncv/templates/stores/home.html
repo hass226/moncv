@@ -1,0 +1,961 @@
+{% extends 'base.html' %}
+{% load currency_tags %}
+
+{% block title %}Accueil - MYMEDAGA{% endblock %}
+
+{% block meta_title %}MYMEDAGA - Marketplace pour jeunes vendeurs en Afrique{% endblock %}
+{% block meta_description %}Crée ta boutique en ligne, vends tes produits avec WhatsApp et découvre les meilleurs jeunes vendeurs africains sur MYMEDAGA.{% endblock %}
+{% block meta_keywords %}marketplace Afrique, boutique en ligne jeune, vendre sur WhatsApp, jeunes entrepreneurs, jobs étudiants, live commerce{% endblock %}
+
+{% block og_title %}MYMEDAGA - Crée ta boutique et vends tes produits{% endblock %}
+{% block og_description %}Plateforme e-commerce moderne pour jeunes vendeurs : boutiques, produits tendance, Hall of Fame et jobs étudiants.{% endblock %}
+
+{% block twitter_title %}MYMEDAGA - Marketplace pour jeunes vendeurs{% endblock %}
+{% block twitter_description %}Crée ta boutique, vends tes produits et développe ton business en Afrique avec MYMEDAGA.{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, rgba(10, 14, 39, 0.9), rgba(114, 9, 183, 0.8));
+        backdrop-filter: blur(10px);
+        border-radius: 30px;
+        padding: 60px 30px;
+        margin-bottom: 50px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(247, 184, 1, 0.1) 0%, transparent 70%);
+        animation: rotate 20s linear infinite;
+    }
+
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero-title {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 3.5rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, #F7B801, #FF6B35, #E63946);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 20px;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        animation: fadeInUp 1s ease;
+    }
+
+    .hero-subtitle {
+        font-size: 1.3rem;
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: 30px;
+        font-weight: 300;
+        animation: fadeInUp 1s ease 0.2s both;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .stats-section {
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        margin-top: 40px;
+        flex-wrap: wrap;
+    }
+
+    .stat-item {
+        text-align: center;
+        animation: fadeInUp 1s ease 0.4s both;
+    }
+
+    .stat-number {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 2.5rem;
+        font-weight: 900;
+        color: var(--primary-yellow);
+        display: block;
+    }
+
+    .stat-label {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .section-title {
+        text-align: center;
+        margin-bottom: 40px;
+        position: relative;
+    }
+
+    .section-title h2 {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 2.5rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, var(--primary-yellow), var(--primary-orange));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 10px;
+    }
+
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100px;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary-yellow), var(--primary-orange), var(--primary-red));
+        border-radius: 2px;
+    }
+
+    .product-card .card-title {
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 10px;
+    }
+
+    .product-price {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 1.8rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, var(--primary-green), #00A878);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 15px;
+    }
+
+    .btn-outline-primary {
+        border: 2px solid var(--primary-orange);
+        color: var(--primary-orange);
+        border-radius: 20px;
+        padding: 8px 20px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-outline-primary:hover {
+        background: linear-gradient(135deg, var(--primary-orange), var(--primary-red));
+        border-color: transparent;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(255, 107, 53, 0.4);
+    }
+
+    .page-link {
+        border-radius: 15px;
+        margin: 0 5px;
+        border: 2px solid var(--primary-orange);
+        color: var(--primary-orange);
+        font-weight: 600;
+    }
+
+    .page-link:hover {
+        background: linear-gradient(135deg, var(--primary-orange), var(--primary-red));
+        border-color: transparent;
+        color: white;
+    }
+
+    .page-item.active .page-link {
+        background: linear-gradient(135deg, var(--primary-orange), var(--primary-red));
+        border-color: transparent;
+    }
+
+    /* Styles pour le slider de produits recommandés */
+    .recommended-slider-container {
+        position: relative;
+        margin: 2rem 0;
+        padding: 0 40px;
+    }
+    
+    .recommended-slider {
+        overflow: hidden;
+        width: 100%;
+    }
+    
+    .recommended-products {
+        display: flex;
+        gap: 20px;
+        transition: transform 0.3s ease;
+        padding: 20px 0;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
+    }
+    
+    .slider-arrow {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 1.2rem;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+    
+    .slider-arrow:hover {
+        background: var(--primary-orange);
+    }
+    
+    .prev-arrow {
+        left: 0;
+    }
+    
+    .next-arrow {
+        right: 0;
+    }
+    
+    .verified-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: linear-gradient(135deg, var(--primary-yellow), var(--primary-orange));
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        z-index: 10;
+        box-shadow: 0 3px 10px rgba(247, 184, 1, 0.5);
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    .featured-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: linear-gradient(135deg, var(--primary-purple), #9D4EDD);
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        z-index: 10;
+        box-shadow: 0 3px 10px rgba(114, 9, 183, 0.5);
+    }
+
+    .product-card {
+        position: relative;
+        transition: transform 0.35s ease, box-shadow 0.3s ease, opacity 0.35s ease;
+        transform: translateY(10px);
+        opacity: 0;
+    }
+
+    .product-card.visible {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    .product-card:hover {
+        transform: translateY(-6px) scale(1.01);
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+    }
+
+    .store-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, var(--primary-yellow), var(--primary-orange));
+        color: white;
+        padding: 3px 10px;
+        border-radius: 15px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-left: 5px;
+    }
+
+    .verified-stores-section {
+        margin-bottom: 50px;
+    }
+
+    .store-card-mini {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 15px;
+        text-align: center;
+        transition: all 0.3s;
+        border: 2px solid transparent;
+    }
+
+    .store-card-mini:hover {
+        transform: translateY(-5px);
+        border-color: var(--primary-yellow);
+        box-shadow: 0 10px 30px rgba(247, 184, 1, 0.3);
+    }
+
+    .store-logo-mini {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--primary-yellow);
+        margin: 0 auto 10px;
+    }
+
+    .fade-section {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .fade-section.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .hero-particles {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+        z-index: 0;
+    }
+
+    .btn-animated {
+        position: relative;
+        overflow: hidden;
+        transform: translateY(0);
+        transition: transform 0.2s ease, box-shadow 0.25s ease;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+    }
+
+    .btn-animated::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -50%;
+        width: 40%;
+        height: 100%;
+        background: linear-gradient(120deg, rgba(255,255,255,0.4), transparent);
+        transform: skewX(-20deg);
+        opacity: 0;
+        transition: transform 0.5s, opacity 0.5s;
+    }
+
+    .btn-animated:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 16px 35px rgba(0,0,0,0.35);
+    }
+
+    .btn-animated:hover::after {
+        opacity: 1;
+        transform: translateX(250%) skewX(-20deg);
+    }
+
+    .recommended-slider {
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        padding-bottom: 0.5rem;
+    }
+
+    .recommended-slider::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .recommended-slider::-webkit-scrollbar-track {
+        background: rgba(255,255,255,0.05);
+    }
+
+    .recommended-slider::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.4);
+        border-radius: 999px;
+    }
+
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2rem;
+        }
+        .hero-subtitle {
+            font-size: 1rem;
+        }
+        .stats-section {
+            gap: 20px;
+        }
+        .stat-number {
+            font-size: 1.8rem;
+        }
+
+        /* Mode plus immersif sur mobile : cartes produits plus grandes et centrées */
+        .row.g-4 {
+            row-gap: 1.5rem !important;
+        }
+        .product-card {
+            transform-origin: center;
+        }
+        .product-card .product-image {
+            height: 260px;
+        }
+        .col-md-4.col-lg-3 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero-section fade-section">
+    <div class="hero-particles" id="hero-particles"></div>
+    <div class="hero-content">
+        <h1 class="hero-title">MYMEDAGA</h1>
+        <p class="hero-subtitle">MYMEDAGA : l’avenir de la vente en ligne.</p>
+        <p class="hero-subtitle" style="font-size: 1.1rem;">Crée ta boutique, montre ton style, vends au monde entier.</p>
+        {% if not user.is_authenticated %}
+        <a href="{% url 'register' %}" class="btn btn-primary btn-lg mt-3 btn-animated" style="border-radius: 30px; padding: 15px 40px;">
+            <i class="bi bi-rocket-takeoff"></i> Commencer maintenant
+        </a>
+        {% endif %}
+        <div class="stats-section">
+            <div class="stat-item">
+                <span class="stat-number hero-stat-count">{{ page_obj.paginator.count|default:0 }}</span>
+                <span class="stat-label">Produits</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">∞</span>
+                <span class="stat-label">Opportunités</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">100%</span>
+                <span class="stat-label">Jeunesse</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4 mb-5 fade-section">
+    <div class="section-title fade-section">
+        <h2>Hall of Fame des vendeurs</h2>
+        <p style="color: rgba(255,255,255,0.8); margin-top: 20px;">
+            Les boutiques qui font vibrer MYMEDAGA cette semaine.
+        </p>
+    </div>
+    <div class="text-center">
+        <a href="{% url 'top_stores' %}" class="btn btn-success btn-lg btn-animated" style="border-radius: 30px; padding: 12px 32px;">
+            <i class="bi bi-trophy"></i> Voir le Hall of Fame
+        </a>
+    </div>
+</div>
+
+{% if categories %}
+<div class="categories-section mb-5 fade-section">
+    <div class="section-title">
+        <h2>Catégories</h2>
+        <p style="color: rgba(255,255,255,0.8); margin-top: 20px;">Explorez par catégorie</p>
+    </div>
+    <div class="row g-3">
+        {% for category in categories %}
+        <div class="col-6 col-md-3 col-lg-2">
+            <a href="{% url 'search' %}?category={{ category.id }}" class="text-decoration-none">
+                <div class="card text-center" style="background: rgba(255,255,255,0.95); border-radius: 15px; padding: 20px; transition: all 0.3s; border: none;">
+                    <i class="bi {{ category.icon|default:'bi-grid' }}" style="font-size: 2.5rem; color: var(--primary-orange); margin-bottom: 10px;"></i>
+                    <h6 style="font-size: 0.9rem; color: var(--text-dark); margin: 0;">{{ category.name }}</h6>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if verified_stores %}
+<div class="verified-stores-section fade-section">
+    <div class="section-title">
+        <h2>Boutiques Vérifiées</h2>
+        <p style="color: rgba(255,255,255,0.8); margin-top: 20px;">Découvrez nos boutiques certifiées</p>
+    </div>
+    <div class="row g-3">
+        {% for store in verified_stores %}
+        <div class="col-6 col-md-4 col-lg-2">
+            <a href="{% url 'store_detail' store.id %}" class="text-decoration-none">
+                <div class="store-card-mini">
+                    {% if store.logo %}
+                        <img src="{{ store.logo.url }}" alt="{{ store.name }}" class="store-logo-mini">
+                    {% else %}
+                        <div class="store-logo-mini bg-secondary d-flex align-items-center justify-content-center">
+                            <i class="bi bi-shop text-white"></i>
+                        </div>
+                    {% endif %}
+                    <h6 style="font-size: 0.85rem; color: var(--text-dark); margin: 0;">{{ store.name|truncatewords:2 }}</h6>
+                    <span class="verified-badge" style="position: static; display: inline-block; margin-top: 5px; font-size: 0.6rem;">
+                        <i class="bi bi-check-circle-fill"></i> Vérifié
+                    </span>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="section-title">
+    <h2>Produits Tendance</h2>
+    <p style="color: rgba(255,255,255,0.8); margin-top: 20px;">Explorez les créations de nos jeunes vendeurs</p>
+</div>
+
+<div class="row g-4">
+    {% if page_obj %}
+        {% for product in page_obj %}
+        <div class="col-6 col-md-4 col-lg-3 mb-4">
+            <div class="card product-card h-100" style="min-width: 200px;">
+                {% if product.is_currently_featured %}
+                <span class="featured-badge">
+                    <i class="bi bi-star-fill"></i> En Vedette
+                </span>
+                {% endif %}
+                {% if product.store.is_verified %}
+                <span class="verified-badge">
+                    <i class="bi bi-check-circle-fill"></i> Vérifié
+                </span>
+                {% endif %}
+                <img src="{{ product.image.url }}" class="card-img-top product-image" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">
+                        {{ product.name|truncatechars:30 }}
+                        {% if product.store.is_verified %}
+                        <span class="store-badge"><i class="bi bi-check-circle"></i></span>
+                        {% endif %}
+                    </h5>
+                    <p class="card-text text-muted small">{{ product.description|truncatewords:15|default:"Aucune description disponible" }}</p>
+                    <div class="mt-auto">
+                        <p class="product-price" data-amount="{{ product.price }}" data-currency="{{ product.currency|default:'EUR' }}">
+                            {{ product.price }} {{ product.get_currency_display }}
+                        </p>
+                        {% if product.is_currently_featured and product.featured_until %}
+                        <small class="text-muted" style="font-size: 0.75rem; display: block; margin-top: 2px;">
+                            En promotion jusqu'au {{ product.featured_until|date:"d/m/Y" }}
+                        </small>
+                        {% endif %}
+                        <div class="d-flex gap-2 mb-2">
+                            <small class="text-muted">
+                                <i class="bi bi-heart"></i> {{ product.likes_count|default:0 }}
+                            </small>
+                            <small class="text-muted">
+                                <i class="bi bi-chat"></i> {{ product.comments.count|default:0 }}
+                            </small>
+                            <small class="text-muted">
+                                <i class="bi bi-eye"></i> {{ product.views_count|default:0 }}
+                            </small>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'product_detail' product.id %}" class="btn btn-outline-primary btn-sm btn-animated">
+                                <i class="bi bi-eye"></i> Voir détails
+                            </a>
+                            <button onclick="commanderAvecLocalisation('{{ product.id }}', '{{ product.name|escapejs }}', '{{ product.price }}', '{{ product.store.whatsapp_number }}')" 
+                                    class="whatsapp-btn text-center btn-animated" style="border: none; cursor: pointer; width: 100%;">
+                                <span><i class="bi bi-whatsapp"></i> <i class="bi bi-geo-alt"></i> Commander</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    
+        {# Pagination #}
+        {% if page_obj.has_other_pages %}
+        <div class="col-12">
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Précédent">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">&laquo;</span>
+                        </li>
+                    {% endif %}
+                    
+                    {% for i in page_obj.paginator.page_range %}
+                        {% if page_obj.number == i %}
+                            <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                        {% else %}
+                            <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Suivant">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">&raquo;</span>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    
+    {% else %}
+        <div class="col-12">
+            <div class="alert alert-info text-center" style="background: rgba(255,255,255,0.95); border-radius: 20px; border: none; padding: 40px;">
+                <i class="bi bi-info-circle" style="font-size: 3rem; color: var(--primary-orange);"></i>
+                <h4 style="margin-top: 20px; color: var(--text-dark);">Aucun produit disponible pour le moment</h4>
+                <p style="color: var(--text-dark);">Soyez le premier à créer votre boutique et ajouter des produits !</p>
+                {% if not user.is_authenticated %}
+                <a href="{% url 'register' %}" class="btn btn-primary mt-3">
+                    <i class="bi bi-person-plus"></i> Créer mon compte
+                </a>
+                {% else %}
+                <a href="{% url 'add_product' %}" class="btn btn-primary mt-3">
+                    <i class="bi bi-plus-circle"></i> Ajouter un produit
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+{% if recommended_products %}
+<div class="section-title mt-5 fade-section">
+    <h2>Recommandé pour toi</h2>
+    <p style="color: rgba(255,255,255,0.8); margin-top: 20px;">Une sélection de produits à ne pas manquer.</p>
+</div>
+
+<div class="recommended-slider-container">
+    <div class="recommended-slider">
+        <div class="recommended-products">
+    {% for product in recommended_products %}
+    <div class="col-6 col-md-4 col-lg-3 mb-4">
+        <div class="card product-card h-100" style="min-width: 200px;">
+            {% if product.is_currently_featured %}
+            <span class="featured-badge">
+                <i class="bi bi-star-fill"></i> En Vedette
+            </span>
+            {% endif %}
+            {% if product.store.is_verified %}
+            <span class="verified-badge">
+                <i class="bi bi-check-circle-fill"></i> Vérifié
+            </span>
+            {% endif %}
+            <img src="{{ product.image.url }}" class="card-img-top product-image" alt="{{ product.name }}">
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">
+                    {{ product.name }}
+                    {% if product.store.is_verified %}
+                    <span class="store-badge"><i class="bi bi-check-circle"></i></span>
+                    {% endif %}
+                </h5>
+                <p class="card-text text-muted small">{{ product.description|truncatewords:15 }}</p>
+                <div class="mt-auto">
+                    <p class="product-price" data-amount="{{ product.price }}" data-currency="{{ product.currency|default:'EUR' }}">
+                        {{ product.price }} {{ product.get_currency_display }}
+                    </p>
+                    {% if product.is_currently_featured %}
+                    <small class="text-muted" style="font-size: 0.75rem; display: block; margin-top: 2px;">
+                        En promotion jusqu'au {{ product.featured_until|date:"d/m" }}
+                    </small>
+                    {% endif %}
+                    <div class="d-flex gap-2 mb-2">
+                        <small class="text-muted">
+                            <i class="bi bi-heart"></i> {{ product.likes_count|default:0 }}
+                        </small>
+                        <small class="text-muted">
+                            <i class="bi bi-chat"></i> {{ product.comments.count|default:0 }}
+                        </small>
+                        <small class="text-muted">
+                            <i class="bi bi-eye"></i> {{ product.views_count|default:0 }}
+                        </small>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'product_detail' product.id %}" class="btn btn-outline-primary btn-sm btn-animated">
+                            <i class="bi bi-eye"></i> Voir détails
+                        </a>
+                        <button onclick="commanderAvecLocalisation('{{ product.id }}', '{{ product.name|escapejs }}', '{{ product.price }}', '{{ product.store.whatsapp_number }}')" 
+                                class="whatsapp-btn text-center btn-animated" style="border: none; cursor: pointer; width: 100%;">
+                            <span><i class="bi bi-whatsapp"></i> <i class="bi bi-geo-alt"></i> Commander</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+        </div>
+    </div>
+    <button class="slider-arrow prev-arrow">&larr;</button>
+    <button class="slider-arrow next-arrow">&rarr;</button>
+</div>
+{% endif %}
+
+{% if page_obj.has_other_pages %}
+<nav aria-label="Page navigation" class="mt-5 fade-section">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1">
+                    <i class="bi bi-chevron-double-left"></i> Premier
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                    <i class="bi bi-chevron-left"></i> Précédent
+                </a>
+            </li>
+        {% endif %}
+        
+        <li class="page-item active">
+            <span class="page-link">Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</span>
+        </li>
+        
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                    Suivant <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                    Dernier <i class="bi bi-chevron-double-right"></i>
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const heroCountEl = document.querySelector('.hero-stat-count');
+        if (heroCountEl) {
+            const finalValue = parseInt(heroCountEl.textContent || '0', 10) || 0;
+            let start = 0;
+            const duration = 1000;
+            const startTime = performance.now();
+
+            const step = (now) => {
+                const progress = Math.min((now - startTime) / duration, 1);
+                const value = start + (finalValue - start) * progress;
+                heroCountEl.textContent = Math.floor(value);
+                if (progress < 1) requestAnimationFrame(step);
+            };
+
+            requestAnimationFrame(step);
+        }
+
+        const productCards = document.querySelectorAll('.product-card');
+
+        if ('IntersectionObserver' in window) {
+            const observer = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        obs.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.15 });
+
+            productCards.forEach(card => observer.observe(card));
+
+            const fadeSections = document.querySelectorAll('.fade-section');
+            const sectionObserver = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        obs.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.2 });
+
+            fadeSections.forEach(section => sectionObserver.observe(section));
+        } else {
+            productCards.forEach(card => card.classList.add('visible'));
+            document.querySelectorAll('.fade-section').forEach(section => section.classList.add('visible'));
+        }
+
+        const heroSection = document.querySelector('.hero-section');
+        if (heroSection && window.matchMedia && window.matchMedia('(pointer: fine)').matches) {
+            const maxTilt = 10;
+            heroSection.addEventListener('mousemove', (event) => {
+                const rect = heroSection.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const rotateX = ((y - centerY) / centerY) * -maxTilt;
+                const rotateY = ((x - centerX) / centerX) * maxTilt;
+                heroSection.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(1)}deg) rotateY(${rotateY.toFixed(1)}deg)`;
+            });
+
+            heroSection.addEventListener('mouseleave', () => {
+                heroSection.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
+            });
+        }
+
+        const particlesContainer = document.getElementById('hero-particles');
+        if (particlesContainer) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            particlesContainer.appendChild(canvas);
+
+            const particles = [];
+            const PARTICLE_COUNT = 40;
+
+            const resizeCanvas = () => {
+                canvas.width = particlesContainer.clientWidth;
+                canvas.height = particlesContainer.clientHeight;
+            };
+
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    r: 1 + Math.random() * 3,
+                    dx: -0.3 + Math.random() * 0.6,
+                    dy: -0.3 + Math.random() * 0.6,
+                    o: 0.3 + Math.random() * 0.6
+                });
+            }
+
+            const animateParticles = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    p.x += p.dx;
+                    p.y += p.dy;
+
+                    if (p.x < 0) p.x = canvas.width;
+                    if (p.x > canvas.width) p.x = 0;
+                    if (p.y < 0) p.y = canvas.height;
+                    if (p.y > canvas.height) p.y = 0;
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(247, 184, 1, ${p.o.toFixed(2)})`;
+                    ctx.fill();
+                });
+                requestAnimationFrame(animateParticles);
+            };
+
+            animateParticles();
+        }
+
+        const slider = document.querySelector('.recommended-slider');
+        if (slider) {
+            let autoScroll;
+            const startAutoScroll = () => {
+                autoScroll = setInterval(() => {
+                    const maxScroll = slider.scrollWidth - slider.clientWidth;
+                    if (slider.scrollLeft >= maxScroll - 5) {
+                        slider.scrollTo({ left: 0, behavior: 'smooth' });
+                    } else {
+                        slider.scrollBy({ left: slider.clientWidth, behavior: 'smooth' });
+                    }
+                }, 5000);
+            };
+
+            const stopAutoScroll = () => {
+                if (autoScroll) clearInterval(autoScroll);
+            };
+
+            if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+                startAutoScroll();
+                slider.addEventListener('mouseenter', stopAutoScroll);
+                slider.addEventListener('mouseleave', startAutoScroll);
+            }
+        }
+
+        // Gestion du slider de produits recommandés
+        const recommendedSlider = document.querySelector('.recommended-products');
+        const prevBtn = document.querySelector('.prev-arrow');
+        const nextBtn = document.querySelector('.next-arrow');
+        
+        if (recommendedSlider && prevBtn && nextBtn) {
+            const productCards = document.querySelectorAll('.recommended-products .product-card');
+            const cardWidth = productCards[0]?.offsetWidth + 15; // 15px de gap
+            const visibleCards = Math.floor(document.querySelector('.recommended-slider').offsetWidth / cardWidth);
+            const maxScroll = (productCards.length - visibleCards) * cardWidth;
+            let currentPosition = 0;
+            
+            function updateButtons() {
+                prevBtn.disabled = currentPosition === 0;
+                nextBtn.disabled = currentPosition >= maxScroll;
+            }
+            
+            function slideTo(position) {
+                currentPosition = Math.max(0, Math.min(position, maxScroll));
+                recommendedSlider.style.transform = `translateX(-${currentPosition}px)`;
+                updateButtons();
+            }
+            
+            prevBtn.addEventListener('click', () => {
+                slideTo(currentPosition - (cardWidth * visibleCards));
+            });
+            
+            nextBtn.addEventListener('click', () => {
+                slideTo(currentPosition + (cardWidth * visibleCards));
+            });
+            
+            // Mise à jour de la position au redimensionnement
+            window.addEventListener('resize', () => {
+                const newCardWidth = productCards[0]?.offsetWidth + 15;
+                const newVisibleCards = Math.floor(document.querySelector('.recommended-slider').offsetWidth / newCardWidth);
+                const newMaxScroll = (productCards.length - newVisibleCards) * newCardWidth;
+                
+                // maxScroll est une constante, on ne peut pas la réaffecter
+                currentPosition = Math.min(currentPosition, maxScroll);
+                recommendedSlider.style.transform = `translateX(-${currentPosition}px)`;
+                updateButtons();
+            });
+            
+            updateButtons();
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}
+

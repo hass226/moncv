@@ -1,0 +1,316 @@
+{% extends 'base.html' %}
+
+{% block title %}Promouvoir - MYMEDAGA{% endblock %}
+
+{% block extra_css %}
+<style>
+    .promotion-card {
+        background: linear-gradient(135deg, rgba(10, 14, 39, 0.95), rgba(114, 9, 183, 0.8));
+        backdrop-filter: blur(10px);
+        border-radius: 30px;
+        padding: 40px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        border: 2px solid var(--primary-purple);
+    }
+
+    .promotion-type-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 30px;
+        margin: 15px 0;
+        border: 3px solid transparent;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+    .promotion-type-card:hover {
+        border-color: var(--primary-purple);
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(114, 9, 183, 0.3);
+    }
+
+    .promotion-type-card.selected {
+        border-color: var(--primary-purple);
+        background: rgba(114, 9, 183, 0.1);
+    }
+
+    .promotion-icon {
+        font-size: 3rem;
+        color: var(--primary-purple);
+        margin-bottom: 15px;
+    }
+
+    .pack-card {
+        transition: transform 0.3s, box-shadow 0.3s;
+        background: white;
+        border: 2px solid #6f42c1;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    .pack-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .pack-card .card-body {
+        padding: 1.5rem;
+    }
+
+    .pack-card .card-title {
+        color: #6f42c1;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .pack-card h3 {
+        color: #2d1a4a;
+        font-weight: 700;
+        margin: 0.5rem 0;
+    }
+
+    .pack-card .badge {
+        background-color: #6f42c1;
+        color: white;
+        padding: 0.5em 1em;
+        border-radius: 20px;
+        font-size: 0.9em;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        display: inline-block;
+    }
+
+    .pack-card .text-muted {
+        color: #6c757d !important;
+        font-size: 0.9em;
+    }
+
+    .pack-card .form-check-input:checked {
+        background-color: #6f42c1;
+        border-color: #6f42c1;
+    }
+
+    .pack-card.selected {
+        border-color: #4a1f8a;
+        box-shadow: 0 0 15px rgba(111, 66, 193, 0.5);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="promotion-card">
+            <div class="text-center mb-4">
+                <h1 class="display-4" style="color: white; margin-bottom: 10px;">
+                    <i class="bi bi-megaphone"></i> Promouvoir
+                </h1>
+                <p style="color: rgba(255,255,255,0.8); font-size: 1.2rem;">
+                    Mettez en avant vos produits ou votre boutique
+                </p>
+            </div>
+
+            <form method="post" id="promotionForm" action="{% url 'promote' %}">
+                {% csrf_token %}
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="promotion-type-card" onclick="selectType('product')">
+                            <div class="text-center">
+                                <i class="bi bi-box-seam promotion-icon"></i>
+                                <h3>Promotion Produit</h3>
+                                <p class="text-muted">Mettez un produit en vedette</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="promotion-type-card" onclick="selectType('store')">
+                            <div class="text-center">
+                                <i class="bi bi-shop promotion-icon"></i>
+                                <h3>Promotion Boutique</h3>
+                                <p class="text-muted">Mettez votre boutique en vedette</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.promotion_type.id_for_label }}" class="form-label" style="color: white; font-weight: 600;">
+                        Type de promotion *
+                    </label>
+                    {{ form.promotion_type }}
+                </div>
+
+                <div id="product-field" class="mb-3" style="display: none;">
+                    <label for="{{ form.product.id_for_label }}" class="form-label" style="color: white; font-weight: 600;">
+                        Produit à promouvoir *
+                    </label>
+                    {{ form.product }}
+                </div>
+
+                <div id="store-field" class="mb-3" style="display: none;">
+                    <label for="{{ form.store.id_for_label }}" class="form-label" style="color: white; font-weight: 600;">
+                        Boutique à promouvoir *
+                    </label>
+                    {{ form.store }}
+                </div>
+
+                <div class="mb-4">
+                    <h4 class="text-white mb-3">Choisissez votre pack de promotion</h4>
+                    <div class="row g-3">
+                        <div class="col-md-6 col-lg-3">
+                            <div class="card pack-card h-100" onclick="selectPack('1000')" style="cursor: pointer; border: 2px solid #6f42c1; border-radius: 15px; transition: all 0.3s;">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-purple">Flash</h5>
+                                    <h3 class="mb-3">1 000 FCFA</h3>
+                                    <div class="mb-3">
+                                        <span class="badge bg-purple text-white mb-2">1 Jour</span>
+                                        <p class="mb-1">Jusqu'à 1 000 personnes</p>
+                                        <p class="text-muted small">Idéal pour des offres éclair</p>
+                                    </div>
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input class="form-check-input" type="radio" name="pack" id="pack_1000" value="1000" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <div class="card pack-card h-100" onclick="selectPack('2000')" style="cursor: pointer; border: 2px solid #6f42c1; border-radius: 15px; transition: all 0.3s;">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-purple">Express</h5>
+                                    <h3 class="mb-3">2 000 FCFA</h3>
+                                    <div class="mb-3">
+                                        <span class="badge bg-purple text-white mb-2">2 Jours</span>
+                                        <p class="mb-1">Jusqu'à 3 000 personnes</p>
+                                        <p class="text-muted small">Parfait pour un coup de boost</p>
+                                    </div>
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input class="form-check-input" type="radio" name="pack" id="pack_2000" value="2000" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <div class="card pack-card h-100" onclick="selectPack('3000')" style="cursor: pointer; border: 2px solid #6f42c1; border-radius: 15px; transition: all 0.3s;">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-purple">Pro</h5>
+                                    <h3 class="mb-3">3 000 FCFA</h3>
+                                    <div class="mb-3">
+                                        <span class="badge bg-purple text-white mb-2">3 Jours</span>
+                                        <p class="mb-1">Jusqu'à 6 000 personnes</p>
+                                        <p class="text-muted small">Pour une visibilité optimale</p>
+                                    </div>
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input class="form-check-input" type="radio" name="pack" id="pack_3000" value="3000" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <div class="card pack-card h-100" onclick="selectPack('5000')" style="cursor: pointer; border: 2px solid #6f42c1; border-radius: 15px; transition: all 0.3s;">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-purple">VIP</h5>
+                                    <h3 class="mb-3">5 000 FCFA</h3>
+                                    <div class="mb-3">
+                                        <span class="badge bg-purple text-white mb-2">7 Jours</span>
+                                        <p class="mb-1">Jusqu'à 15 000 personnes</p>
+                                        <p class="text-muted small">Visibilité maximale</p>
+                                    </div>
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input class="form-check-input" type="radio" name="pack" id="pack_5000" value="5000" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {{ form.pack.errors }}
+                    <input type="hidden" name="pack" id="selected_pack" value="1000" required>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" style="border-radius: 25px; padding: 15px; background: linear-gradient(135deg, var(--primary-purple), #9D4EDD);">
+                        <i class="bi bi-rocket-takeoff"></i> Activer la promotion
+                    </button>
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-light btn-lg" style="border-radius: 25px; padding: 15px;">
+                        <i class="bi bi-arrow-left"></i> Retour au dashboard
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function selectType(type) {
+    document.getElementById('id_promotion_type').value = type;
+    if (type === 'product') {
+        document.getElementById('product-field').style.display = 'block';
+        document.getElementById('store-field').style.display = 'none';
+    } else {
+        document.getElementById('product-field').style.display = 'none';
+        document.getElementById('store-field').style.display = 'block';
+    }
+}
+
+// Afficher le champ approprié selon la sélection
+document.getElementById('id_promotion_type').addEventListener('change', function() {
+    selectType(this.value);
+});
+
+// Gestion de la sélection des packs
+function selectPack(packId) {
+    // Désélectionner tous les packs
+    document.querySelectorAll('.pack-card').forEach(card => {
+        card.style.borderColor = '#6f42c1';
+        card.style.boxShadow = 'none';
+    });
+    
+    // Sélectionner le pack cliqué
+    const selectedCard = document.querySelector(`#pack_${packId}`).closest('.pack-card');
+    if (selectedCard) {
+        selectedCard.style.borderColor = '#4a1f8a';
+        selectedCard.style.boxShadow = '0 0 15px rgba(111, 66, 193, 0.5)';
+    }
+    
+    // Mettre à jour le champ caché
+    document.getElementById('selected_pack').value = packId;
+    
+    // Cochez la radio correspondante
+    document.getElementById(`pack_${packId}`).checked = true;
+}
+
+// Initialiser la sélection du premier pack par défaut
+document.addEventListener('DOMContentLoaded', function() {
+    // Sélectionner le premier pack par défaut
+    selectPack('1000');
+    
+    // Ajouter des écouteurs d'événements pour la sélection au clic
+    document.querySelectorAll('.pack-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const radio = this.querySelector('input[type="radio"]');
+            if (radio) {
+                selectPack(radio.value);
+            }
+        });
+    });
+
+    // Gestion de la soumission du formulaire
+    document.getElementById('promotionForm').addEventListener('submit', function(e) {
+        const submitBtn = document.getElementById('submitBtn');
+        const selectedPack = document.getElementById('selected_pack').value;
+        
+        if (!selectedPack) {
+            e.preventDefault();
+            alert('Veuillez sélectionner un pack de promotion');
+            return false;
+        }
+        
+        // Désactiver le bouton pour éviter les soumissions multiples
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Traitement...';
+        
+        return true;
+    });
+});
+</script>
+{% endblock %}

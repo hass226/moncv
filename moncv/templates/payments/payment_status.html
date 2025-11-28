@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-header {% if transaction.status == 'completed' %}bg-success{% elif transaction.status == 'failed' %}bg-danger{% else %}bg-warning{% endif %} text-white">
+                    <h4 class="mb-0">
+                        {% if transaction.status == 'completed' %}
+                            <i class="fas fa-check-circle me-2"></i> Paiement Réussi
+                        {% elif transaction.status == 'failed' %}
+                            <i class="fas fa-times-circle me-2"></i> Paiement Échoué
+                        {% else %}
+                            <i class="fas fa-clock me-2"></i> Paiement en Attente
+                        {% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        {% if transaction.status == 'completed' %}
+                            <div class="text-success mb-3">
+                                <i class="fas fa-check-circle" style="font-size: 5rem;"></i>
+                            </div>
+                            <h3 class="text-success">Paiement Vérifié avec Succès !</h3>
+                        {% elif transaction.status == 'failed' %}
+                            <div class="text-danger mb-3">
+                                <i class="fas fa-times-circle" style="font-size: 5rem;"></i>
+                            </div>
+                            <h3 class="text-danger">Échec de la Vérification</h3>
+                        {% else %}
+                            <div class="text-warning mb-3">
+                                <i class="fas fa-clock" style="font-size: 5rem;"></i>
+                            </div>
+                            <h3 class="text-warning">En Attente de Vérification</h3>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title mb-4">Détails de la Transaction</h5>
+                            
+                            <div class="row mb-2">
+                                <div class="col-6 text-muted">ID de Transaction :</div>
+                                <div class="col-6 text-end fw-bold">{{ transaction.transaction_id }}</div>
+                            </div>
+                            
+                            <div class="row mb-2">
+                                <div class="col-6 text-muted">Méthode de Paiement :</div>
+                                <div class="col-6 text-end">
+                                    <span class="badge bg-primary">
+                                        {{ transaction.get_payment_method_display }}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-2">
+                                <div class="col-6 text-muted">Montant :</div>
+                                <div class="col-6 text-end fw-bold">{{ transaction.amount }} FCFA</div>
+                            </div>
+                            
+                            {% if transaction.phone_number %}
+                            <div class="row mb-2">
+                                <div class="col-6 text-muted">Téléphone :</div>
+                                <div class="col-6 text-end">{{ transaction.phone_number }}</div>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="row mb-2">
+                                <div class="col-6 text-muted">Date :</div>
+                                <div class="col-6 text-end">{{ transaction.created_at|date:"d/m/Y H:i" }}</div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-6 text-muted">Statut :</div>
+                                <div class="col-6 text-end">
+                                    <span class="badge {% if transaction.status == 'completed' %}bg-success{% elif transaction.status == 'failed' %}bg-danger{% else %}bg-warning{% endif %}">
+                                        {{ transaction.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if transaction.status == 'completed' %}
+                        <div class="alert alert-success">
+                            <h5><i class="fas fa-check-circle me-2"></i> Paiement Réussi !</h5>
+                            <p class="mb-0">
+                                Votre paiement a été vérifié avec succès. 
+                                {% if transaction.notes %}
+                                    <br>{{ transaction.notes }}
+                                {% endif %}
+                            </p>
+                        </div>
+                    {% elif transaction.status == 'failed' %}
+                        <div class="alert alert-danger">
+                            <h5><i class="fas fa-exclamation-triangle me-2"></i> Paiement Non Validé</h5>
+                            <p class="mb-0">
+                                Nous n'avons pas pu vérifier votre paiement. 
+                                Veuillez vérifier les informations et réessayer ou contacter le support.
+                            </p>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <h5><i class="fas fa-clock me-2"></i> En Attente de Vérification</h5>
+                            <p class="mb-0">
+                                Votre paiement est en cours de vérification. 
+                                Cette opération peut prendre quelques instants. 
+                                La page se mettra à jour automatiquement.
+                            </p>
+                        </div>
+                        
+                        <!-- Auto-refresh the page every 10 seconds if still pending -->
+                        <script>
+                            setTimeout(function() {
+                                window.location.reload();
+                            }, 10000); // 10 seconds
+                        </script>
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{% url 'verify_payment' %}" class="btn btn-outline-secondary me-md-2">
+                            <i class="fas fa-arrow-left me-1"></i> Retour
+                        </a>
+                        {% if request.user.is_authenticated %}
+                            <a href="{% url 'my_transactions' %}" class="btn btn-primary">
+                                <i class="fas fa-list me-1"></i> Mes Transactions
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer text-muted text-center">
+                    <small>
+                        Besoin d'aide ? Contactez le support à 
+                        <a href="mailto:support@votresite.com">support@votresite.com</a>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

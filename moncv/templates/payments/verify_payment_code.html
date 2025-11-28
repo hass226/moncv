@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load i18n static %}
+
+{% block title %}{% trans 'Vérification du paiement' %}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">{% trans 'Vérification du paiement' %}</h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{% trans 'Fermer' %}"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        {% blocktrans %}
+                        Veuillez saisir le code de vérification que vous avez reçu après votre paiement.
+                        {% endblocktrans %}
+                    </div>
+
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.code.id_for_label }}" class="form-label">
+                                {{ form.code.label }}
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-key"></i></span>
+                                {{ form.code }}
+                            </div>
+                            {% if form.code.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.code.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-check-circle me-2"></i>
+                                {% trans 'Vérifier le code' %}
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="mt-4 text-center">
+                        <p class="text-muted mb-2">{% trans 'Vous n\'avez pas encore effectué de paiement ?' %}</p>
+                        <a href="{% url 'stores:subscription_plans' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-right me-2"></i>
+                            {% trans 'Voir les offres d\'abonnement' %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Formater automatiquement le code avec des tirets
+    document.addEventListener('DOMContentLoaded', function() {
+        const codeInput = document.getElementById('{{ form.code.id_for_label }}');
+        
+        codeInput.addEventListener('input', function(e) {
+            // Supprimer tout ce qui n'est pas une lettre ou un chiffre
+            let value = e.target.value.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+            
+            // Ajouter des tirets tous les 4 caractères
+            if (value.length > 4) {
+                value = value.replace(/^(\w{4})(\w+)/, '$1-$2');
+            }
+            if (value.length > 9) {
+                value = value.replace(/^(\w{4})-(\w{4})(\w+)/, '$1-$2-$3');
+            }
+            
+            // Limiter à 14 caractères (XXXX-XXXX-XXXX)
+            if (value.length > 14) {
+                value = value.substring(0, 14);
+            }
+            
+            e.target.value = value;
+        });
+    });
+</script>
+{% endblock %}

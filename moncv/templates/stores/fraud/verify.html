@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Vérifier mon compte - MYMEDAGA{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-lg" style="border-radius: 20px;">
+                <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #00C896, #4facfe); border: none;">
+                    <h4 class="mb-0"><i class="bi bi-shield-check me-2"></i>Vérifier mon compte</h4>
+                </div>
+                <div class="card-body p-5">
+                    <p class="text-muted mb-4">Vérifiez votre identité pour obtenir un badge de vérification et gagner la confiance de la communauté.</p>
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Type de vérification *</label>
+                            <select name="verification_type" class="form-select rounded-pill" required>
+                                <option value="">Sélectionner...</option>
+                                <option value="student_id">Carte étudiante</option>
+                                <option value="national_id">Carte nationale d'identité</option>
+                                <option value="phone">Vérification téléphone</option>
+                                <option value="email">Vérification email</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Numéro du document</label>
+                            <input type="text" name="document_number" class="form-control rounded-pill" placeholder="Optionnel">
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Document (photo/scan) *</label>
+                            <input type="file" name="document_file" class="form-control rounded-pill" accept="image/*,.pdf" required>
+                            <small class="text-muted">Format accepté : JPG, PNG, PDF (max 5MB)</small>
+                        </div>
+                        <div class="alert alert-warning rounded-4">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <strong>Important :</strong> Vos documents sont traités de manière sécurisée et confidentielle. Ils ne seront jamais partagés publiquement.
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg rounded-pill">
+                                <i class="bi bi-check-circle me-2"></i>SOUMETTRE LA VÉRIFICATION
+                            </button>
+                            <a href="{% url 'student_profile' %}" class="btn btn-outline-secondary rounded-pill">Annuler</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

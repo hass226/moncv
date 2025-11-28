@@ -1,0 +1,377 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Colonne de gauche - Photo de profil et informations -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <div class="mb-3 position-relative">
+                        <div class="position-relative" style="width: 150px; height: 150px; margin: 0 auto;">
+                            {% if student_profile and student_profile.profile_picture %}
+                                <img src="{{ student_profile.profile_picture.url }}" 
+                                     alt="{{ profile_user.username }}" 
+                                     class="rounded-circle img-thumbnail w-100 h-100" 
+                                     style="object-fit: cover;">
+                            {% elif general_profile.avatar %}
+                                <img src="{{ general_profile.avatar.url }}" 
+                                     alt="{{ profile_user.username }}" 
+                                     class="rounded-circle img-thumbnail w-100 h-100" 
+                                     style="object-fit: cover;">
+                            {% else %}
+                                <img src="{% static 'img/default-avatar.png' %}" 
+                                     alt="Image par défaut" 
+                                     class="rounded-circle img-thumbnail w-100 h-100" 
+                                     style="object-fit: cover;">
+                            {% endif %}
+                            {% if is_own_profile %}
+                                <a href="{% url 'edit_profile' %}" 
+                                   class="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle p-2"
+                                   style="transform: translate(25%, 25%);">
+                                    <i class="fas fa-camera"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <h4 class="mb-1">
+                        {{ profile_user.get_full_name|default:profile_user.username }}
+                    </h4>
+                    
+                    {% if general_profile.job_title %}
+                        <p class="text-muted mb-3">{{ general_profile.job_title }}</p>
+                    {% endif %}
+                    
+                    {% if is_own_profile %}
+                        <a href="{% url 'edit_profile' %}" class="btn btn-primary btn-sm mb-3">
+                            <i class="fas fa-edit me-1"></i> Modifier le profil
+                        </a>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-center mb-2" style="margin-top: 1.5rem;">
+                        {% if general_profile.linkedin_url %}
+                            <a href="{{ general_profile.linkedin_url }}" target="_blank" class="btn btn-outline-primary me-2">
+                                <i class="fab fa-linkedin"></i>
+                            </a>
+                        {% endif %}
+                        
+                        {% if general_profile.github_url %}
+                            <a href="{{ general_profile.github_url }}" target="_blank" class="btn btn-outline-dark me-2">
+                                <i class="fab fa-github"></i>
+                            </a>
+                        {% endif %}
+                        
+                        {% if general_profile.twitter_url %}
+                            <a href="{{ general_profile.twitter_url }}" target="_blank" class="btn btn-outline-info">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Section Contact -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Contact</h5>
+                </div>
+                <div class="card-body">
+                    {% if general_profile.email %}
+                        <p class="mb-2">
+                            <i class="fas fa-envelope me-2"></i> {{ general_profile.email }}
+                        </p>
+                    {% endif %}
+                    
+                    {% if general_profile.phone %}
+                        <p class="mb-2">
+                            <i class="fas fa-phone me-2"></i> {{ general_profile.phone }}
+                        </p>
+                    {% endif %}
+                    
+                    {% if general_profile.website %}
+                        <p class="mb-0">
+                            <i class="fas fa-globe me-2"></i> 
+                            <a href="{{ general_profile.website }}" target="_blank">
+                                {{ general_profile.website|truncatechars:20 }}
+                            </a>
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Compétences -->
+            {% if general_profile.skills.exists %}
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Compétences</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for skill in general_profile.skills.all %}
+                            <span class="badge bg-primary">{{ skill.name }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Colonne de droite - Détails du profil -->
+        <div class="col-md-8">
+            <!-- Bannière supérieure -->
+            <div class="card mb-4 position-relative">
+                {% if student_profile and student_profile.cover_photo %}
+                    <img src="{{ student_profile.cover_photo.url }}" 
+                         class="card-img-top" 
+                         alt="Bannière de couverture"
+                         style="height: 200px; object-fit: cover;">
+                {% elif general_profile.cover_photo %}
+                    <img src="{{ general_profile.cover_photo.url }}" 
+                         class="card-img-top" 
+                         alt="Bannière de couverture"
+                         style="height: 200px; object-fit: cover;">
+                {% else %}
+                    <div class="bg-light" style="height: 200px;"></div>
+                {% endif %}
+                
+                {% if is_own_profile %}
+                    <a href="{% url 'edit_profile' %}" 
+                       class="position-absolute bottom-0 end-0 m-3 btn btn-light btn-sm"
+                       style="z-index: 2;">
+                        <i class="fas fa-camera me-1"></i> Modifier la couverture
+                    </a>
+                {% endif %}
+                
+                <div class="card-body">
+                    <h3 class="card-title">
+                        {{ profile_user.get_full_name|default:profile_user.username }}
+                        {% if is_own_profile %}
+                            <small class="text-muted">(C'est vous)</small>
+                        {% endif %}
+                    </h3>
+                    
+                    {% if general_profile.headline %}
+                        <p class="lead">{{ general_profile.headline }}</p>
+                    {% endif %}
+                    
+                    <div class="d-flex gap-3 mb-3">
+                        {% if general_profile.location %}
+                            <span class="text-muted">
+                                <i class="fas fa-map-marker-alt me-1"></i> {{ general_profile.location }}
+                            </span>
+                        {% endif %}
+                        
+                        <span class="text-muted">
+                            <i class="fas fa-eye me-1"></i> {{ general_profile.profile_views }} vues
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- À propos -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">À propos</h5>
+                </div>
+                <div class="card-body">
+                    {% if general_profile.bio %}
+                        <p class="card-text">{{ general_profile.bio|linebreaksbr }}</p>
+                    {% else %}
+                        <p class="text-muted fst-italic">
+                            {% if is_own_profile %}
+                                <a href="{% url 'edit_profile' %}">Ajoutez une description</a> pour que les autres sachent qui vous êtes.
+                            {% else %}
+                                Cet utilisateur n'a pas encore ajouté de description.
+                            {% endif %}
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Expérience professionnelle -->
+            {% if general_profile.experience_set.all %}
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Expérience professionnelle</h5>
+                </div>
+                <div class="card-body">
+                    {% for exp in general_profile.experience_set.all %}
+                        <div class="mb-4">
+                            <h6 class="mb-1">{{ exp.title }} - {{ exp.company }}</h6>
+                            <p class="text-muted mb-1">
+                                {{ exp.start_date|date:"F Y" }} - 
+                                {% if exp.current %}
+                                    Actuel
+                                {% elif exp.end_date %}
+                                    {{ exp.end_date|date:"F Y" }}
+                                {% else %}
+                                    Non spécifié
+                                {% endif %}
+                            </p>
+                            {% if exp.description %}
+                                <p class="mb-0">{{ exp.description|linebreaksbr }}</p>
+                            {% endif %}
+                        </div>
+                        {% if not forloop.last %}<hr>{% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Section Produits de l'utilisateur -->
+            {% if has_products %}
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        {% if is_own_profile %}Mes produits{% else %}Produits{% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for product in user_products %}
+                        <div class="col-md-4 col-6 mb-4">
+                            <div class="card h-100 product-card">
+                                <a href="{% url 'product_detail' product.id %}">
+                                    <div class="position-relative">
+                                        <img src="{{ product.images.first.image.url|default:'/static/img/default-product.png' }}" 
+                                             class="card-img-top product-image" alt="{{ product.name }}" style="height: 180px; object-fit: cover;">
+                                        {% if product.promotions.active %}
+                                        <span class="position-absolute top-0 end-0 m-2 bg-warning text-dark px-2 py-1 rounded" style="font-size: 0.8rem;">
+                                            PROMO
+                                        </span>
+                                        {% elif product.store.is_verified %}
+                                        <span class="position-absolute top-0 end-0 m-2 bg-info text-white px-2 py-1 rounded" style="font-size: 0.8rem;">
+                                            VERIFIE
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </a>
+                                <div class="card-body p-2">
+                                    <h6 class="card-title mb-1">
+                                        <a href="{% url 'product_detail' product.id %}" class="text-dark text-decoration-none">
+                                            {{ product.name|truncatechars:30 }}
+                                        </a>
+                                    </h6>
+                                    <p class="mb-1">
+                                        <span class="text-primary fw-bold">
+                                            {% if product.promotions.active %}
+                                                {{ product.get_discounted_price|floatformat:2 }} {{ CURRENCY.symbol }}
+                                                <small class="text-muted text-decoration-line-through">
+                                                    {{ product.price|floatformat:2 }} {{ CURRENCY.symbol }}
+                                                </small>
+                                            {% else %}
+                                                {{ product.price|floatformat:2 }} {{ CURRENCY.symbol }}
+                                            {% endif %}
+                                        </span>
+                                    </p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-muted small">
+                                            <i class="far fa-eye"></i> {{ product.views_count|default:0 }}
+                                        </span>
+                                        <span class="text-muted small">
+                                            <i class="far fa-heart"></i> {{ product.likes.count|default:0 }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    {% if user_products|length > 8 %}
+                    <div class="text-center mt-3">
+                        <a href="{% if is_own_profile %}{% url 'dashboard' %}{% else %}{% url 'store_detail' profile_user.store.id %}{% endif %}" class="btn btn-outline-primary">
+                            Voir tous les produits
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% elif is_own_profile %}
+            <div class="card mb-4">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                    <h5>Vous n'avez pas encore de produits</h5>
+                    <p class="text-muted">Commencez par ajouter des produits à votre boutique pour les voir apparaître ici.</p>
+                    <a href="{% url 'add_product' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i> Ajouter un produit
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Projets -->
+            {% if general_profile.project_set.all %}
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Projets</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for project in general_profile.project_set.all %}
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100">
+                                    {% if project.image %}
+                                        <img src="{{ project.image.url }}" 
+                                             class="card-img-top" 
+                                             alt="{{ project.title }}"
+                                             style="height: 140px; object-fit: cover;">
+                                    {% endif %}
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ project.title }}</h6>
+                                        {% if project.url %}
+                                            <a href="{{ project.url }}" target="_blank" class="btn btn-sm btn-outline-primary mb-2">
+                                                Voir le projet
+                                            </a>
+                                        {% endif %}
+                                        <p class="card-text small">{{ project.description|truncatewords:20 }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+    }
+    
+    .card-header {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .img-thumbnail {
+        border: 2px solid #dee2e6;
+    }
+    
+    .badge {
+        font-weight: 500;
+        padding: 0.4em 0.8em;
+    }
+    
+    .social-btn {
+        width: 40px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+    }
+</style>
+{% endblock %}
