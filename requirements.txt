@@ -6,16 +6,20 @@ whitenoise==6.6.0  # Pour servir les fichiers statiques
 Django==4.2.7
 asgiref==3.7.2
 sqlparse==0.4.4
+dj-database-url==2.1.0  # Pour la configuration de la base de données
+python-decouple==3.8  # Pour la gestion des variables d'environnement
 
 # Base de données
 psycopg2-binary==2.9.9  # Pour PostgreSQL
+
+# Cache
+redis==5.0.1  # Pour le cache et les files d'attente
 
 # Utilitaires
 python-dotenv==1.0.0
 requests==2.31.0
 urllib3==2.0.3
 pydantic==1.10.8
-python-decouple==3.8
 
 # Autres dépendances
 daphne==4.0.0
