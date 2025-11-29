@@ -14,7 +14,7 @@ cryptography==41.0.7  # Version spécifique pour éviter les conflits
 pyOpenSSL==23.2.0  # Version compatible avec cryptography 41.0.7
 
 # Base de données
-psycopg2-binary==2.9.9  # Pour PostgreSQL
+psycopg2>=2.9.9  # Pour PostgreSQL (version plus récente et plus stable)
 
 # Cache
 redis==5.0.1  # Pour le cache et les files d'attente
