@@ -6,7 +6,8 @@ import sys
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'moncv.settings_dev')
+    # Utilisation de 'moncv.settings' comme module de paramètres par défaut
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'moncv.settings')
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

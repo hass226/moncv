@@ -11,6 +11,7 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
+# Utilisation de 'moncv.settings' comme module de paramètres par défaut
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'moncv.settings')
 
 application = get_wsgi_application()
