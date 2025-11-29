@@ -8,9 +8,12 @@ echo "=== Installation des dépendances système ==="
 # sudo apt-get update
 # sudo apt-get install -y python3-dev libpq-dev
 
-# Mettre à jour pip en premier, en ignorant les erreurs de version
+# Mettre à jour pip en premier avec la commande spécifique de Render
 echo "=== Mise à jour de pip ==="
-python -m pip install --upgrade pip || echo "Échec de la mise à jour de pip, continuation avec la version actuelle"
+/opt/render/project/src/.venv/bin/python3.9 -m pip install --upgrade pip || \
+echo "Échec de la mise à jour de pip avec la commande spécifique, tentative alternative..." && \
+python -m pip install --upgrade pip || \
+echo "Échec de la mise à jour de pip, continuation avec la version actuelle"
 
 echo "\n=== Installation des dépendances ==="
 # Désactiver temporairement le vérificateur de hachage pour éviter les problèmes avec les dépendances existantes
