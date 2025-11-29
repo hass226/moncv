@@ -8,7 +8,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 if not SECRET_KEY:
     raise RuntimeError('SECRET_KEY must be set in environment for production')
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'mymydaga.onrender.com,moncv.fr').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'mymedaga.onrender.com,moncv-u7k3.onrender.com').split(',')
 
 DATABASES = {
     'default': dj_database_url.config(
