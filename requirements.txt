@@ -1,23 +1,13 @@
 # Core dependencies
 gunicorn==21.2.0  # Serveur WSGI pour le déploiement
-cffi==1.16.0  # Version spécifique requise pour la compatibilité
 whitenoise==6.6.0  # Pour servir les fichiers statiques
-psycopg2-binary==2.9.9  # Pour la base de données PostgreSQL
-
-# Django
-Django==4.2.7
-channels==4.0.0
-channels-redis==4.1.0
-redis==4.5.5
 
 # Flask et ses dépendances
 Flask==2.3.3
 Werkzeug==2.3.7
-Jinja2==3.1.2  # Version mise à jour pour la compatibilité
+Jinja2==3.1.2
 itsdangerous==2.1.2
 click==8.1.7
-
-# Sécurité
 cryptography==41.0.7  # Version compatible avec pyOpenSSL
 pyOpenSSL==23.2.0
 service-identity==23.1.0
