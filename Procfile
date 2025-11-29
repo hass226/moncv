@@ -1,1 +1,1 @@
-web: gunicorn moncv.wsgi:application --log-file -
+web: gunicorn moncv.moncv.wsgi:application --log-file -
