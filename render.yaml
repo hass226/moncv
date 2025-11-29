@@ -3,7 +3,7 @@ services:
     name: moncv
     runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn moncv.wsgi:application
+    startCommand: gunicorn wsgi:application
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.0
