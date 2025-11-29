@@ -1,30 +1,36 @@
 # Core dependencies
+gunicorn==21.2.0  # Serveur WSGI pour le déploiement
+
+# Django
 Django==4.2.7
 channels==4.0.0
 channels-redis==4.1.0
 redis==4.5.5
 
-# Flask dependencies
+# Flask et ses dépendances
 Flask==2.3.3
 Werkzeug==2.3.7
-Jinja2==3.0.3
+Jinja2==3.1.2  # Version mise à jour pour la compatibilité
 itsdangerous==2.1.2
 click==8.1.7
 
-# Utils
+# Sécurité
+cryptography==41.0.7  # Version compatible avec pyOpenSSL
+pyOpenSSL==23.2.0
+service-identity==23.1.0
+
+# Utilitaires
 python-dotenv==1.0.0
 requests==2.31.0
 urllib3==2.0.3
-pydantic==1.10.8  # Version 1.x pour une meilleure compatibilité
+pydantic==1.10.8
 python-decouple==3.8
-cryptography==42.0.2
+
+# Autres dépendances
 daphne==4.0.0
-geopy==2.3.0  # Pour les fonctionnalités de géolocalisation
-Pillow==10.0.0  # Pour le traitement d'images
-paydunya==1.0.7  # Pour les paiements
-pyOpenSSL==23.2.0  # Pour la sécurité
-service-identity==23.1.0  # Pour la vérification SSL
-stripe==5.5.0  # Pour les paiements en ligne
-uvicorn==0.22.0
-Werkzeug==2.3.7
-zope.interface==6.0
+geopy==2.3.0
+Pillow==10.0.0
+paydunya==1.0.7
+stripe==5.5.0
+uvicorn==0.22.0  # Serveur ASGI pour Django Channels
+zope.interface==6.0  # Requis par Twisted (dépendance de Channels)
