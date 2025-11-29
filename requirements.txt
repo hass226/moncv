@@ -1,5 +1,4 @@
 # Core dependencies
---upgrade pip  # Mettre à jour pip en premier
 gunicorn==21.2.0  # Serveur WSGI pour le déploiement
 whitenoise==6.6.0  # Pour servir les fichiers statiques
 

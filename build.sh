@@ -2,8 +2,9 @@
 # build.sh - Script pour construire l'application
 set -e  # Arrêter le script en cas d'erreur
 
+# Mettre à jour pip en premier, en ignorant les erreurs de version
 echo "=== Mise à jour de pip ==="
-python -m pip install --upgrade pip
+python -m pip install --upgrade pip || echo "Échec de la mise à jour de pip, continuation avec la version actuelle"
 
 echo "\n=== Installation des dépendances ==="
 # Désactiver temporairement le vérificateur de hachage pour éviter les problèmes avec les dépendances existantes
