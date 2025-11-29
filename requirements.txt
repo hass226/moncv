@@ -1,3 +1,6 @@
+# Mise à jour de pip
+--upgrade pip
+
 # Core dependencies
 gunicorn==21.2.0  # Serveur WSGI pour le déploiement
 whitenoise==6.6.0  # Pour servir les fichiers statiques
@@ -8,6 +11,10 @@ asgiref==3.7.2
 sqlparse==0.4.4
 dj-database-url==2.1.0  # Pour la configuration de la base de données
 python-decouple==3.8  # Pour la gestion des variables d'environnement
+
+# Mise à jour des dépendances pour Python 3.10
+cryptography>=41.0.0  # Version compatible avec Python 3.10
+pyOpenSSL>=23.2.0  # Version compatible avec cryptography>=41.0.0
 
 # Base de données
 psycopg2-binary==2.9.9  # Pour PostgreSQL
