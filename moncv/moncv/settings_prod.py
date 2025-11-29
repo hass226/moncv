@@ -8,10 +8,14 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 if not SECRET_KEY:
     raise RuntimeError('SECRET_KEY must be set in environment for production')
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'moncv.fr').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'mymydaga.onrender.com,moncv.fr').split(',')
 
 DATABASES = {
-    'default': dj_database_url.config(default=os.getenv('DATABASE_URL')),
+    'default': dj_database_url.config(
+        default=os.getenv('DATABASE_URL'),
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
