@@ -3,18 +3,20 @@ services:
     name: moncv
     runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn wsgi:application
+    startCommand: gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.0
-      - key: DJANGO_SETTINGS_MODULE
-        value: moncv.settings_dev
+      - key: FLASK_APP
+        value: app.py
+      - key: FLASK_ENV
+        value: production
       - key: SECRET_KEY
         generateValue: true
       - key: WEB_CONCURRENCY
         value: 4
-      - key: ALLOWED_HOSTS
-        value: your-render-app-url.onrender.com
+      - key: SERVER_NAME
+        value: MYMEDAGA.onrener.com
       - key: DEBUG
         value: 'False'
       - key: DATABASE_URL
