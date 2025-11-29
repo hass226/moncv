@@ -1,8 +1,14 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for
+import os
 from payment_verification import PaymentVerification, PaymentProvider
 
 app = Flask(__name__)
-app.config['SERVER_NAME'] = 'MYMEDAGA.onrener.com'
+# Utilisez le nom d'hôte fourni par Render ou une valeur par défaut
+app.config['SERVER_NAME'] = os.environ.get('RENDER_EXTERNAL_HOSTNAME', 'localhost:5000')
+# Désactivez le débogage en production
+app.config['DEBUG'] = os.environ.get('FLASK_ENV') == 'development'
+
+# Initialisation du système de paiement
 payment_system = PaymentVerification()
 
 @app.route('/')

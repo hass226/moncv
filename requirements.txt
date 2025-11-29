@@ -1,5 +1,6 @@
 # Core dependencies
 gunicorn==21.2.0  # Serveur WSGI pour le déploiement
+cffi==1.16.0  # Version spécifique requise pour la compatibilité
 
 # Django
 Django==4.2.7
